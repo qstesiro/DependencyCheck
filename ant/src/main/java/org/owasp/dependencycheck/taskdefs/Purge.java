@@ -22,17 +22,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 
-import org.apache.commons.jcs3.JCS;
-import org.apache.commons.jcs3.access.CacheAccess;
-import org.apache.commons.jcs3.engine.CompositeCacheAttributes;
-import org.apache.commons.jcs3.engine.behavior.ICompositeCacheAttributes;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.owasp.dependencycheck.Engine;
-import org.owasp.dependencycheck.data.cache.DataCache;
 import org.owasp.dependencycheck.utils.Settings;
-import org.owasp.dependencycheck.xml.pom.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.impl.StaticLoggerBinder;
@@ -150,7 +144,7 @@ public class Purge extends Task {
     @Override
     public final void execute() throws BuildException {
         muteJCS();
-        ClassLoader current = Thread.currentThread().getContextClassLoader();
+        final ClassLoader current = Thread.currentThread().getContextClassLoader();
         try {
             Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 
