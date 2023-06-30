@@ -483,6 +483,20 @@
     </suppress>
     <suppress base="true">
         <notes><![CDATA[
+        FP per #3762
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.itextpdf\.licensing/licensing\-base@.*$</packageUrl>
+        <cpe>cpe:/a:itextpdf:itext</cpe>
+    </suppress>
+    <suppress base="true">
+        <notes><![CDATA[
+        FP per #3762
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.itextpdf\.licensing/licensing\-remote@.*$</packageUrl>
+        <cpe>cpe:/a:itextpdf:itext</cpe>
+    </suppress>
+    <suppress base="true">
+        <notes><![CDATA[
         FP per #2453
         TODO - there are likely several other testcontainer suppressions that should be added
         ]]></notes>
