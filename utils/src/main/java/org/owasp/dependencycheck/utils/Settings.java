@@ -38,6 +38,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.ProtectionDomain;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -214,6 +216,41 @@ public final class Settings {
          * time is in milliseconds.
          */
         public static final String CVE_DOWNLOAD_WAIT_TIME = "cve.download.waittime";
+
+        /**
+         * API Key for the NVD API.
+         */
+        public static final String NVD_API_KEY = "nvd.api.key";
+        /**
+         * The thread count for downloading from the NVD API.
+         */
+        public static final String NVD_API_THREADCOUNT = "nvd.api.threadcount";
+        /**
+         * The properties key to control the skipping of the check for NVD
+         * updates.
+         */
+        public static final String NVD_API_VALID_FOR_HOURS = "nvd.api.check.validforhours";
+        
+        /**
+         * The properties key for the telling us how many nvd.url.* URLs exists.
+         * This is used in combination with NVD_CACHE_URL to be able to retrieve
+         * the URLs for all of the files that make up the NVD CVE listing.
+         */
+        public static final String NVD_CACHE_START_YEAR = "nvd.cache.startyear";
+        /**
+         * The username to use when connecting to the NVD Cache URL.
+         */
+        public static final String NVD_CACHE_USER = "nvd.user";
+        /**
+         * The password to authenticate to the NVD Cache URL.
+         */
+        public static final String NVD_CACHE_PASSWORD = "nvd.password";
+        /**
+         * The properties key for the URL to retrieve the recently cached NVD
+         * JSON data feeds.
+         */
+        public static final String NVD_CACHE_URL = "nvd.cache.url";
+
         /**
          * The properties key that indicates how often the CPE data needs to be
          * updated.

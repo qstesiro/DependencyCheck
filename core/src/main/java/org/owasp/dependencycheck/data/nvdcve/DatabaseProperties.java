@@ -45,6 +45,20 @@ public class DatabaseProperties {
      * The Logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseProperties.class);
+
+    /**
+     * The last modified request data for the NVD API.
+     */
+    public static final String NVD_API_LAST_MODIFIED = "nvd.api.last.modified";
+    /**
+     * The properties file key for the last checked field - used to store the
+     * last check time.
+     */
+    public static final String NVD_LAST_CHECKED = "nvd.api.last.checked";
+
+    public static final String NVD_CACHE_LAST_MODIFIED_BASE = "nvd.cache.last.modified";
+
+    // TODO DELETE START--------------------------------------------------------
     /**
      * Modified key word, used as a key to store information about the modified
      * file (i.e. the containing the last 8 days of updates)..
@@ -66,6 +80,8 @@ public class DatabaseProperties {
      * days of the last update.
      */
     public static final String LAST_UPDATED_BASE = "NVD CVE ";
+
+    // TODO DELETE END---------------------------------------------------------
     /**
      * The key for the last time the CPE data was updated.
      */
@@ -197,5 +213,31 @@ public class DatabaseProperties {
             }
         }
         return map;
+    }
+    
+    /**
+     * Retrieves a zoned date time.
+     *
+     * @param key the property key
+     * @return the zoned date time
+     */
+    public ZonedDateTime getTimestamp(String key) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        if (properties.contains(key)) {
+            String value = properties.getProperty(key);
+            return ZonedDateTime.parse(value, dtf);
+        }
+        return null;
+    }
+
+    /**
+     * Stores a timestamp.
+     *
+     * @param key the property key
+     * @param timestamp the zoned date time
+     */
+    public void save(String key, ZonedDateTime timestamp) throws UpdateException {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        save(key, dtf.format(timestamp));
     }
 }

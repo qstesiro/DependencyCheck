@@ -137,8 +137,8 @@ public class ProcessTask implements Callable<ProcessTask> {
     protected void importJSON(File file) throws ParserConfigurationException, IOException, SQLException, DatabaseException,
             ClassNotFoundException, UpdateException, CorruptedDatastreamException {
 
-        final NvdCveParser parser = new NvdCveParser(settings, cveDB);
-        parser.parse(file);
+//        final NvdCveParser parser = new NvdCveParser(settings, cveDB);
+//        parser.parse(file);
     }
 
     /**

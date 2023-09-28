@@ -2603,21 +2603,21 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         for (Dependency d : dependencies) {
             boolean addName = true;
             for (Vulnerability v : d.getVulnerabilities()) {
-                final float cvssV2 = v.getCvssV2() != null ? v.getCvssV2().getScore() : -1;
-                final float cvssV3 = v.getCvssV3() != null ? v.getCvssV3().getBaseScore() : -1;
-                final float unscoredCvss = v.getUnscoredSeverity() != null ? SeverityUtil.estimateCvssV2(v.getUnscoredSeverity()) : -1;
+                final Double cvssV2 = v.getCvssV2() != null && v.getCvssV2().getCvssData() != null  && v.getCvssV2().getCvssData().getBaseScore() != null ? v.getCvssV2().getCvssData().getBaseScore() : -1;
+                final Double cvssV3 = v.getCvssV3() != null && v.getCvssV3().getCvssData() != null && v.getCvssV3().getCvssData().getBaseScore() != null ? v.getCvssV3().getCvssData().getBaseScore() : -1;
+                final Double unscoredCvss = v.getUnscoredSeverity() != null ? SeverityUtil.estimateCvssV2(v.getUnscoredSeverity()) : -1;
 
                 if (failBuildOnAnyVulnerability || cvssV2 >= failBuildOnCVSS
                         || cvssV3 >= failBuildOnCVSS
                         || unscoredCvss >= failBuildOnCVSS
                         //safety net to fail on any if for some reason the above misses on 0
-                        || (failBuildOnCVSS <= 0.0f)) {
+                        || (failBuildOnCVSS <= 0.0)) {
                     String name = v.getName();
-                    if (cvssV3 >= 0.0f) {
+                    if (cvssV3 >= 0.0) {
                         name += "(" + cvssV3 + ")";
-                    } else if (cvssV2 >= 0.0f) {
+                    } else if (cvssV2 >= 0.0) {
                         name += "(" + cvssV2 + ")";
-                    } else if (unscoredCvss >= 0.0f) {
+                    } else if (unscoredCvss >= 0.0) {
                         name += "(" + unscoredCvss + ")";
                     }
                     if (addName) {

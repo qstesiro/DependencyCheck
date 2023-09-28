@@ -101,7 +101,7 @@ public class DependencyCheckScanAgent {
      * to 11. The valid range for the fail build on CVSS is 0 to 11, where
      * anything above 10 will not cause the build to fail.
      */
-    private float failBuildOnCVSS = 11;
+    private Double failBuildOnCVSS = 11.0;
     /**
      * Sets whether auto-updating of the NVD CVE/CPE data is enabled. It is not
      * recommended that this be turned to false. Default is true.
@@ -310,7 +310,7 @@ public class DependencyCheckScanAgent {
      *
      * @return the value of failBuildOnCVSS
      */
-    public float getFailBuildOnCVSS() {
+    public Double getFailBuildOnCVSS() {
         return failBuildOnCVSS;
     }
 
@@ -319,7 +319,7 @@ public class DependencyCheckScanAgent {
      *
      * @param failBuildOnCVSS new value of failBuildOnCVSS
      */
-    public void setFailBuildOnCVSS(float failBuildOnCVSS) {
+    public void setFailBuildOnCVSS(Double failBuildOnCVSS) {
         this.failBuildOnCVSS = failBuildOnCVSS;
     }
 
@@ -993,7 +993,7 @@ public class DependencyCheckScanAgent {
                 if (this.showSummary) {
                     showSummary(engine.getDependencies());
                 }
-                if (this.failBuildOnCVSS <= 10) {
+                if (this.failBuildOnCVSS <= 10.0) {
                     checkForFailure(engine.getDependencies());
                 }
             }
@@ -1025,8 +1025,8 @@ public class DependencyCheckScanAgent {
         for (Dependency d : dependencies) {
             boolean addName = true;
             for (Vulnerability v : d.getVulnerabilities()) {
-                if ((v.getCvssV2() != null && v.getCvssV2().getScore() >= failBuildOnCVSS)
-                        || (v.getCvssV3() != null && v.getCvssV3().getBaseScore() >= failBuildOnCVSS)
+                    if ((v.getCvssV2() != null && v.getCvssV2().getCvssData().getBaseScore() >= failBuildOnCVSS)
+                        || (v.getCvssV3() != null && v.getCvssV3().getCvssData().getBaseScore() >= failBuildOnCVSS)
                         || (v.getUnscoredSeverity() != null && SeverityUtil.estimateCvssV2(v.getUnscoredSeverity()) >= failBuildOnCVSS)
                         //safety net to fail on any if for some reason the above misses on 0
                         || (failBuildOnCVSS <= 0.0f)) {

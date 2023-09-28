@@ -27,6 +27,10 @@ import org.slf4j.LoggerFactory;
  */
 public final class SeverityUtil {
 
+    private static final Double HIGH = 10.0;
+    private static final Double MEDIUM = 6.9;
+    private static final Double LOW = 3.9;
+    private static final Double NONE = 0.0;
     /**
      * The logger.
      */
@@ -47,22 +51,22 @@ public final class SeverityUtil {
      * @param severity the severity text (e.g. "medium")
      * @return a score from 0 to 10
      */
-    public static float estimateCvssV2(String severity) {
+    public static Double estimateCvssV2(String severity) {
         switch (severity == null ? "none" : severity.toLowerCase()) {
             case "critical":
             case "high":
-                return 10.0f;
+                return HIGH;
             case "moderate":
             case "medium":
-                return 6.9f;
+                return MEDIUM;
             case "info":
+            case "none":
             case "informational":
-                return 0.0f;
+                return NONE;
             case "low":
             case "unknown":
-            case "none":
             default:
-                return 3.9f;
+                return LOW;
         }
     }
 
@@ -108,24 +112,24 @@ public final class SeverityUtil {
      * highest severity).
      * @see #sortAdjustedCVSSv3BaseScore(float)
      */
-    public static float estimatedSortAdjustedCVSSv3(final String severity) {
+    public static Double estimatedSortAdjustedCVSSv3(final String severity) {
         switch (Severity.forUnscored(severity)) {
             case CRITICAL:
-                return 10.2f;
+                return 10.2;
             case HIGH:
-                return 7.0f;
+                return 7.0;
             case MEDIUM:
-                return 4.0f;
+                return 4.0;
             case LOW:
-                return 0.1f;
+                return 0.1;
             case INFO:
-                return 0.0f;
+                return 0.0;
             case ASSUMED_CRITICAL:
             default:
                 SeverityUtil.LOGGER.debug("Unrecognized unscored textual severity: {}, assuming critical score as worst-case "
                                            + "estimate for sorting",
                                            severity);
-                return 10.1f;
+                return 10.1;
         }
     }
 
@@ -140,9 +144,9 @@ public final class SeverityUtil {
      * critical nature)
      * @see #estimatedSortAdjustedCVSSv3(String)
      */
-    public static float sortAdjustedCVSSv3BaseScore(final float cvssV3BaseScore) {
-        if (cvssV3BaseScore >= 9.0f) {
-            return cvssV3BaseScore + 1.3f;
+    public static Double sortAdjustedCVSSv3BaseScore(final Double cvssV3BaseScore) {
+        if (cvssV3BaseScore.floatValue() >= 9.0f) {
+            return cvssV3BaseScore + 1.3;
         }
         return cvssV3BaseScore;
     }
