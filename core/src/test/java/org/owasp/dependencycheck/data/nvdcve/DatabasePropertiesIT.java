@@ -21,7 +21,6 @@ import org.owasp.dependencycheck.BaseDBTestCase;
 import java.util.Properties;
 import org.junit.After;
 import org.junit.Test;
-import org.owasp.dependencycheck.data.update.nvd.NvdCveInfo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -59,21 +58,6 @@ public class DatabasePropertiesIT extends BaseDBTestCase {
         assertNotNull(prop);
         //no exception means the call worked... whether or not it is empty depends on if the db is new
         //assertEquals(expResult, result);
-    }
-
-    /**
-     * Test of save method, of class DatabaseProperties.
-     */
-    @Test
-    public void testSave() throws Exception {
-        NvdCveInfo updatedValue = new NvdCveInfo("test","url",1337L);
-        String key = "test";
-        long expected = 1337L;
-        DatabaseProperties instance = cveDb.getDatabaseProperties();
-        instance.save(updatedValue);
-        instance = cveDb.reloadProperties();
-        long results = Long.parseLong(instance.getProperty("NVD CVE " + key));
-        assertEquals(expected, results);
     }
 
     /**

@@ -33,10 +33,17 @@ public class NvdApiProcessor implements Callable<NvdApiProcessor> {
     private final CveDB cveDB;
     private final Collection<DefCveItem> data;
     private final CveEcosystemMapper mapper = new CveEcosystemMapper();
-
-    public NvdApiProcessor(final CveDB cveDB, Collection<DefCveItem> data) {
+    private final long startTime;
+    private long endTime = 0;
+    
+    public NvdApiProcessor(final CveDB cveDB, Collection<DefCveItem> data, long startTime) {
         this.cveDB = cveDB;
         this.data = data;
+        this.startTime = startTime;
+    }
+
+    public NvdApiProcessor(final CveDB cveDB, Collection<DefCveItem> data) {
+        this(cveDB, data, System.currentTimeMillis());
     }
 
     @Override
@@ -44,7 +51,11 @@ public class NvdApiProcessor implements Callable<NvdApiProcessor> {
         for (DefCveItem entry : data) {
             cveDB.updateVulnerability(entry, mapper.getEcosystem(entry));
         }
+        endTime = System.currentTimeMillis();
         return this;
     }
-
+    
+    public long getDurationMillis() {
+        return endTime - startTime;
+    }
 }

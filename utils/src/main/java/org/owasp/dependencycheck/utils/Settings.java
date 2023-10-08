@@ -163,6 +163,39 @@ public final class Settings {
          * be imported.
          */
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
+        
+        /**
+         * API Key for the NVD API.
+         */
+        public static final String NVD_API_KEY = "nvd.api.key";
+        /**
+         * The properties key to control the skipping of the check for NVD
+         * updates.
+         */
+        public static final String NVD_API_VALID_FOR_HOURS = "nvd.api.check.validforhours";
+        /**
+         * The properties key that indicates how often the NVD API data feed
+         * needs to be updated before a full refresh is evaluated.
+         */
+        public static final String NVD_API_DATAFEED_VALID_FOR_DAYS = "nvd.api.datafeed.validfordays";
+        /**
+         * The URL for the NVD API Data Feed.
+         */
+        public static final String NVD_API_DATAFEED_URL = "nvd.api.datafeed.url";
+        /**
+         * The username to use when connecting to the NVD Data feed.
+         */
+        public static final String NVD_API_DATAFEED_USER = "nvd.api.datafeed.user";
+        /**
+         * The password to authenticate to the NVD Data feed.
+         */
+        public static final String NVD_API_DATAFEED_PASSWORD = "nvd.api.datafeed.password";
+        /**
+         * The starting year for the NVD CVE Data feed cache.
+         */
+        public static final String NVD_API_DATAFEED_START_YEAR = "nvd.api.datafeed.startyear";
+
+        //TODO DELETE BEGIN
         /**
          * The properties key for the URL to retrieve the recently modified and
          * added CVE entries (last 8 days) using the JSON data feeds.
@@ -218,20 +251,6 @@ public final class Settings {
         public static final String CVE_DOWNLOAD_WAIT_TIME = "cve.download.waittime";
 
         /**
-         * API Key for the NVD API.
-         */
-        public static final String NVD_API_KEY = "nvd.api.key";
-        /**
-         * The thread count for downloading from the NVD API.
-         */
-        public static final String NVD_API_THREADCOUNT = "nvd.api.threadcount";
-        /**
-         * The properties key to control the skipping of the check for NVD
-         * updates.
-         */
-        public static final String NVD_API_VALID_FOR_HOURS = "nvd.api.check.validforhours";
-        
-        /**
          * The properties key for the telling us how many nvd.url.* URLs exists.
          * This is used in combination with NVD_CACHE_URL to be able to retrieve
          * the URLs for all of the files that make up the NVD CVE listing.
@@ -250,7 +269,19 @@ public final class Settings {
          * JSON data feeds.
          */
         public static final String NVD_CACHE_URL = "nvd.cache.url";
-
+        /**
+         * The key to determine if the NVD CVE analyzer is enabled.
+         */
+        public static final String ANALYZER_NVD_CVE_ENABLED = "analyzer.nvdcve.enabled";
+        /**
+         * The properties key setting indicating how many days past the new year
+         * that ODC will "skip" updating that years data feed if not present.
+         */
+        public static final String NVD_NEW_YEAR_GRACE_PERIOD = "nvd.newyear.grace.period";
+        //----------------------------------------------------------------------
+        //DELETE END
+        //----------------------------------------------------------------------
+        
         /**
          * The properties key that indicates how often the CPE data needs to be
          * updated.
@@ -752,10 +783,6 @@ public final class Settings {
          */
         public static final String ANALYZER_VERSION_FILTER_ENABLED = "analyzer.versionfilter.enabled";
         /**
-         * The key to determine if the NVD CVE analyzer is enabled.
-         */
-        public static final String ANALYZER_NVD_CVE_ENABLED = "analyzer.nvdcve.enabled";
-        /**
          * The key to determine if the Vulnerability Suppression analyzer is
          * enabled.
          */
@@ -842,11 +869,6 @@ public final class Settings {
          * sensitive and subsequently masked when logged.
          */
         public static final String MASKED_PROPERTIES = "odc.settings.mask";
-        /**
-         * The properties key setting indicating how many days past the new year
-         * that ODC will "skip" updating that years data feed if not present.
-         */
-        public static final String NVD_NEW_YEAR_GRACE_PERIOD = "nvd.newyear.grace.period";
         /**
          * The properties key for the default max query size for Lucene query
          * results.

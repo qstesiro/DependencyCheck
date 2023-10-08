@@ -17,6 +17,8 @@
  */
 package org.owasp.dependencycheck.utils;
 
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import org.owasp.dependencycheck.exception.ParseException;
 
 import java.util.Calendar;
@@ -78,6 +80,22 @@ public final class DateUtil {
         // ms = dayRange x 24 hours/day x 60 min/hour x 60 sec/min x 1000 ms/sec
         final long msRange = dayRange * 24L * 60L * 60L;
         return (compareTo - date) < msRange;
+    }
+
+    /**
+     * Determines if the date is within the given day range.
+     *
+     * @param date the date
+     * @param compareTo the date to compare against
+     * @param dayRange the number of days allowed
+     * @return if the date is within the dayRange of compareTo
+     */
+    public static boolean withinDateRange(ZonedDateTime date, ZonedDateTime compareTo, int dayRange) {
+        //seconds = dayRange x 24 hours/day x 60 min/hour x 60 sec/min
+        final long seconds = dayRange * 24L * 60L * 60L;
+        Duration duration = Duration.between(date, compareTo);
+        long secondsDifference = duration.getSeconds();
+        return secondsDifference < seconds;
     }
 
     /**

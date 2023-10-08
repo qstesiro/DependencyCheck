@@ -27,7 +27,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 import javax.annotation.concurrent.ThreadSafe;
 
-import org.owasp.dependencycheck.data.update.nvd.NvdCveInfo;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +49,10 @@ public class DatabaseProperties {
      * The last modified request data for the NVD API.
      */
     public static final String NVD_API_LAST_MODIFIED = "nvd.api.last.modified";
-    /**
-     * The properties file key for the last checked field - used to store the
-     * last check time.
-     */
-    public static final String NVD_LAST_CHECKED = "nvd.api.last.checked";
 
-    public static final String NVD_CACHE_LAST_MODIFIED_BASE = "nvd.cache.last.modified";
+    public static final String NVD_CACHE_LAST_CHECKED = "nvd.cache.last.checked";
+
+    public static final String NVD_CACHE_LAST_MODIFIED = "nvd.cache.last.modified";
 
     // TODO DELETE START--------------------------------------------------------
     /**
@@ -64,16 +60,7 @@ public class DatabaseProperties {
      * file (i.e. the containing the last 8 days of updates)..
      */
     public static final String MODIFIED = "Modified";
-    /**
-     * The properties file key for the last checked field - used to store the
-     * last check time of the Modified NVD CVE xml file.
-     */
-    public static final String LAST_CHECKED = "NVD CVE Checked";
-    /**
-     * The properties file key for the last updated field - used to store the
-     * last updated time of the Modified NVD CVE xml file.
-     */
-    public static final String LAST_UPDATED = "NVD CVE Modified";
+
     /**
      * Stores the last updated time for each of the NVD CVE files. These
      * timestamps should be updated if we process the modified file within 7
@@ -126,19 +113,6 @@ public class DatabaseProperties {
      */
     public synchronized boolean isEmpty() {
         return properties == null || properties.isEmpty();
-    }
-
-    /**
-     * Saves the last updated information to the properties file.
-     *
-     * @param updatedValue the updated NVD CVE entry
-     * @throws UpdateException is thrown if there is an update exception
-     */
-    public synchronized void save(NvdCveInfo updatedValue) throws UpdateException {
-        if (updatedValue == null) {
-            return;
-        }
-        save(LAST_UPDATED_BASE + updatedValue.getId(), String.valueOf(updatedValue.getTimestamp()));
     }
 
     /**
@@ -214,7 +188,7 @@ public class DatabaseProperties {
         }
         return map;
     }
-    
+
     /**
      * Retrieves a zoned date time.
      *
@@ -222,12 +196,7 @@ public class DatabaseProperties {
      * @return the zoned date time
      */
     public ZonedDateTime getTimestamp(String key) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
-        if (properties.contains(key)) {
-            String value = properties.getProperty(key);
-            return ZonedDateTime.parse(value, dtf);
-        }
-        return null;
+        return DatabaseProperties.getTimestamp(properties,key);
     }
 
     /**
@@ -240,4 +209,22 @@ public class DatabaseProperties {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
         save(key, dtf.format(timestamp));
     }
+
+    
+    /**
+     * Retrieves a zoned date time.
+     *
+     * @param properties the properties file containing the date time
+     * @param key the property key
+     * @return the zoned date time
+     */
+    public static ZonedDateTime getTimestamp(Properties properties, String key) {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        if (properties.contains(key)) {
+            String value = properties.getProperty(key);
+            return ZonedDateTime.parse(value, dtf);
+        }
+        return null;
+    }
+
 }

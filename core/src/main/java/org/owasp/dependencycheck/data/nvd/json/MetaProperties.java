@@ -31,6 +31,7 @@ import org.owasp.dependencycheck.data.update.exception.InvalidDataException;
  *
  * @author Jeremy Long
  */
+@Deprecated
 public class MetaProperties {
 
     /**

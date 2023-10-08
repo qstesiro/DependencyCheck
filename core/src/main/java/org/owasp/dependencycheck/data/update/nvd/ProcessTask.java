@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author Jeremy Long
  */
 @ThreadSafe
+@Deprecated
 public class ProcessTask implements Callable<ProcessTask> {
 
     /**
@@ -148,20 +149,20 @@ public class ProcessTask implements Callable<ProcessTask> {
      * the database
      */
     private void processFiles() throws UpdateException {
-        LOGGER.info("Processing Started for NVD CVE - {}", downloadTask.getNvdCveInfo().getId());
-        final long startProcessing = System.currentTimeMillis();
-        try {
-            importJSON(downloadTask.getFile());
-            properties.save(downloadTask.getNvdCveInfo());
-        } catch (ParserConfigurationException | SQLException | DatabaseException | ClassNotFoundException | IOException ex) {
-            throw new UpdateException(ex);
-        } catch (CorruptedDatastreamException ex) {
-            downloadTask.evictCorruptFileFromCache();
-            throw new UpdateException(ex);
-        } finally {
-            downloadTask.cleanup();
-        }
-        LOGGER.info("Processing Complete for NVD CVE - {}  ({} ms)", downloadTask.getNvdCveInfo().getId(),
-                System.currentTimeMillis() - startProcessing);
+//        LOGGER.info("Processing Started for NVD CVE - {}", downloadTask.getNvdCveInfo().getId());
+//        final long startProcessing = System.currentTimeMillis();
+//        try {
+//            importJSON(downloadTask.getFile());
+//            properties.save(downloadTask.getNvdCveInfo());
+//        } catch (ParserConfigurationException | SQLException | DatabaseException | ClassNotFoundException | IOException ex) {
+//            throw new UpdateException(ex);
+//        } catch (CorruptedDatastreamException ex) {
+//            downloadTask.evictCorruptFileFromCache();
+//            throw new UpdateException(ex);
+//        } finally {
+//            downloadTask.cleanup();
+//        }
+//        LOGGER.info("Processing Complete for NVD CVE - {}  ({} ms)", downloadTask.getNvdCveInfo().getId(),
+//                System.currentTimeMillis() - startProcessing);
     }
 }

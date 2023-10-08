@@ -24,21 +24,39 @@ import io.github.jeremylong.openvulnerability.client.nvd.NvdCveClient;
 import io.github.jeremylong.openvulnerability.client.nvd.NvdCveClientBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.Duration;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import org.owasp.dependencycheck.Engine;
 import org.owasp.dependencycheck.data.nvdcve.CveDB;
+import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
 import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
+import org.owasp.dependencycheck.data.update.nvd.DownloadTask;
+import org.owasp.dependencycheck.data.update.nvd.ProcessTask;
 import org.owasp.dependencycheck.data.update.nvd.api.NvdApiProcessor;
+import org.owasp.dependencycheck.utils.DateUtil;
+import org.owasp.dependencycheck.utils.DownloadFailedException;
+import org.owasp.dependencycheck.utils.Downloader;
 import org.owasp.dependencycheck.utils.InvalidSettingException;
+import org.owasp.dependencycheck.utils.ResourceNotFoundException;
 import org.owasp.dependencycheck.utils.Settings;
+import org.owasp.dependencycheck.utils.TooManyRequestsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +87,8 @@ public class NvdApiDataSource implements CachedWebDataSource {
      */
     private DatabaseProperties dbProperties = null;
 
+    private static final String NVD_API_CACHE_MODIFIED_DATE = "lastModifiedDate";
+
     @Override
     public boolean update(Engine engine) throws UpdateException {
         this.settings = engine.getSettings();
@@ -78,6 +98,157 @@ public class NvdApiDataSource implements CachedWebDataSource {
         }
         dbProperties = cveDb.getDatabaseProperties();
 
+        String nvdDataFeedUrl = settings.getString(Settings.KEYS.NVD_API_DATAFEED_URL);
+        if (nvdDataFeedUrl != null) {
+            return processDatafeed(nvdDataFeedUrl);
+        }
+        return processApi();
+    }
+
+    private boolean processDatafeed(String nvdDataFeedUrl) throws UpdateException {
+        boolean updatesMade = false;
+        try {
+            dbProperties = cveDb.getDatabaseProperties();
+            if (checkUpdate()) {
+                String url = settings.getString(Settings.KEYS.NVD_API_DATAFEED_URL);
+                if (url == null) {
+                    throw new UpdateException("NVD API Cache URL was not provided");
+                }
+                if (!url.endsWith("/")) {
+                    url += "/";
+                }
+                final Properties cacheProperties = getRemoteCacheProperties(url);
+                final ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+                final Map<String, String> updateable = getUpdatesNeeded(url, cacheProperties, now);
+                if (!updateable.isEmpty()) {
+                    final int downloadPoolSize;
+                    final int max = settings.getInt(Settings.KEYS.MAX_DOWNLOAD_THREAD_POOL_SIZE, 1);
+                    downloadPoolSize = Math.min(Runtime.getRuntime().availableProcessors(), max);
+
+                    ExecutorService processingExecutorService = null;
+                    ExecutorService downloadExecutorService = null;
+                    try {
+                        downloadExecutorService = Executors.newFixedThreadPool(downloadPoolSize);
+                        processingExecutorService = Executors.newFixedThreadPool(PROCESSING_THREAD_POOL_SIZE);
+
+                        DownloadTask runLast = null;
+                        final Set<Future<Future<NvdApiProcessor>>> downloadFutures = new HashSet<>(updateable.size());
+                        runLast = startDownloads(updateable, processingExecutorService, runLast, downloadFutures, downloadExecutorService);
+
+                        //complete downloads
+                        final Set<Future<NvdApiProcessor>> processFutures = new HashSet<>(updateable.size());
+                        for (Future<Future<NvdApiProcessor>> future : downloadFutures) {
+                            processDownload(future, processFutures);
+                        }
+                        //process the data
+                        processFuture(processFutures);
+                        processFutures.clear();
+
+                        //download and process the modified as the last entry
+                        if (runLast != null) {
+                            final Future<Future<NvdApiProcessor>> modified = downloadExecutorService.submit(runLast);
+                            processDownload(modified, processFutures);
+                            processFuture(processFutures);
+                        }
+
+                    } finally {
+                        if (processingExecutorService != null) {
+                            processingExecutorService.shutdownNow();
+                        }
+                        if (downloadExecutorService != null) {
+                            downloadExecutorService.shutdownNow();
+                        }
+                    }
+                    updatesMade = true;
+                }
+                storeLastModifiedDates(now, cacheProperties, updateable);
+                dbProperties.save(url, url);
+                if (updatesMade) {
+                    cveDb.persistEcosystemCache();
+                }
+                final int updateCount = cveDb.updateEcosystemCache();
+                LOGGER.debug("Corrected the ecosystem for {} ecoSystemCache entries", updateCount);
+                if (updatesMade || updateCount > 0) {
+                    cveDb.cleanupDatabase();
+                }
+            }
+        } catch (UpdateException ex) {
+            if (ex.getCause() != null && ex.getCause() instanceof DownloadFailedException) {
+                final String jre = System.getProperty("java.version");
+                if (jre == null || jre.startsWith("1.4") || jre.startsWith("1.5") || jre.startsWith("1.6") || jre.startsWith("1.7")) {
+                    LOGGER.error("An old JRE is being used ({} {}), and likely does not have the correct root certificates or algorithms "
+                            + "to connect to the NVD - consider upgrading your JRE.", System.getProperty("java.vendor"), jre);
+                }
+            }
+            throw ex;
+        } catch (DatabaseException ex) {
+            throw new UpdateException("Database Exception, unable to update the data to use the most current data.", ex);
+        }
+        return updatesMade;
+    }
+
+    private void storeLastModifiedDates(final ZonedDateTime now, final Properties cacheProperties, final Map<String, String> updateable) throws UpdateException {
+        dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_CHECKED, now);
+        dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_MODIFIED, DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + ".modified"));
+        for (String entry : updateable.keySet()) {
+            ZonedDateTime date = DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + "." + entry);
+            dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_MODIFIED + "." + entry, date);
+        }
+    }
+
+    private DownloadTask startDownloads(final Map<String, String> updateable, ExecutorService processingExecutorService, DownloadTask runLast, final Set<Future<Future<NvdApiProcessor>>> downloadFutures, ExecutorService downloadExecutorService) throws UpdateException {
+        for (Map.Entry<String, String> cve : updateable.entrySet()) {
+            final DownloadTask call = new DownloadTask(cve.getValue(), processingExecutorService, cveDb, settings);
+            if (call.isModified()) {
+                runLast = call;
+            } else {
+                final boolean added = downloadFutures.add(downloadExecutorService.submit(call));
+                if (!added) {
+                    throw new UpdateException("Unable to add the download task for " + cve);
+                }
+            }
+        }
+        return runLast;
+    }
+
+    private void processFuture(final Set<Future<NvdApiProcessor>> processFutures) throws UpdateException {
+        //complete processing
+        for (Future<NvdApiProcessor> future : processFutures) {
+            try {
+                final NvdApiProcessor task = future.get();
+                //TODO - do we need to check for errors?
+//                                if (task.getException() != null) {
+//                                    throw task.getException();
+//                                }
+            } catch (InterruptedException ex) {
+                LOGGER.debug("Thread was interrupted during processing", ex);
+                Thread.currentThread().interrupt();
+                throw new UpdateException(ex);
+            } catch (ExecutionException ex) {
+                LOGGER.debug("Execution Exception during process", ex);
+                throw new UpdateException(ex);
+            }
+        }
+    }
+
+    private void processDownload(Future<Future<NvdApiProcessor>> future, final Set<Future<NvdApiProcessor>> processFutures) throws UpdateException {
+        final Future<NvdApiProcessor> task;
+        try {
+            task = future.get();
+            if (task != null) {
+                processFutures.add(task);
+            }
+        } catch (InterruptedException ex) {
+            LOGGER.debug("Thread was interrupted during download", ex);
+            Thread.currentThread().interrupt();
+            throw new UpdateException("The download was interrupted", ex);
+        } catch (ExecutionException ex) {
+            LOGGER.debug("Thread was interrupted during download execution", ex);
+            throw new UpdateException("The execution of the download was interrupted", ex);
+        }
+    }
+
+    private boolean processApi() throws UpdateException {
         ZonedDateTime lastModifiedRequest = dbProperties.getTimestamp(DatabaseProperties.NVD_API_LAST_MODIFIED);
         NvdCveClientBuilder builder = NvdCveClientBuilder.aNvdCveApi();
         if (lastModifiedRequest != null) {
@@ -122,7 +293,6 @@ public class NvdApiDataSource implements CachedWebDataSource {
 
             try {
                 for (Future f : submitted) {
-                    LOGGER.error("updating");
                     while (!f.isDone()) {
                         Thread.sleep(500);
                     }
@@ -194,4 +364,128 @@ public class NvdApiDataSource implements CachedWebDataSource {
         return result;
     }
 
+    /**
+     * Checks if the NVD API Cache JSON files were last checked recently. As an
+     * optimization, we can avoid repetitive checks against the NVD cache.
+     *
+     * @return true to proceed with the check, or false to skip
+     * @throws UpdateException thrown when there is an issue checking for
+     * updates
+     */
+    private boolean checkUpdate() throws UpdateException {
+        boolean proceed = true;
+        // If the valid setting has not been specified, then we proceed to check...
+        final int validForHours = settings.getInt(Settings.KEYS.NVD_API_VALID_FOR_HOURS, 0);
+        if (dataExists() && 0 < validForHours) {
+            // ms Valid = valid (hours) x 60 min/hour x 60 sec/min x 1000 ms/sec
+            final long validForSeconds = validForHours * 60L * 60L;
+            final ZonedDateTime lastChecked = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_CHECKED);
+            final ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
+            Duration duration = Duration.between(now, lastChecked);
+            long difference = duration.getSeconds();
+            proceed = difference > validForSeconds;
+            if (!proceed) {
+                LOGGER.info("Skipping NVD API Cache check since last check was within {} hours.", validForHours);
+                LOGGER.debug("Last NVD API was at {}, and now {} is within {} s.", lastChecked, now, validForSeconds);
+            }
+        }
+        return proceed;
+    }
+
+    /**
+     * Checks the CVE Index to ensure data exists and analysis can continue.
+     *
+     * @return true if the database contains data
+     */
+    private boolean dataExists() {
+        return cveDb.dataExists();
+    }
+
+    /**
+     * Determines if the index needs to be updated. This is done by fetching the
+     * NVD CVE meta data and checking the last update date. If the data needs to
+     * be refreshed this method will return the NvdCveUrl for the files that
+     * need to be updated.
+     *
+     * @param url the URL of the NVD API cache
+     * @param cacheProperties the properties from the remote NVD API cache
+     * @return the map of key to URLs - where the key is the year or `modified`
+     * @throws UpdateException Is thrown if there is an issue with the last
+     * updated properties file
+     */
+    protected final Map<String, String> getUpdatesNeeded(String url, Properties cacheProperties, ZonedDateTime now) throws UpdateException {
+        LOGGER.debug("starting getUpdatesNeeded() ...");
+        final Map<String, String> updates = new HashMap<>();
+        if (dbProperties != null && !dbProperties.isEmpty()) {
+            final int startYear = settings.getInt(Settings.KEYS.NVD_API_DATAFEED_START_YEAR, 2002);
+            // for establishing the current year use the timezone where the new year starts first
+            // as from that moment on CNAs might start assigning CVEs with the new year depending
+            // on the CNA's timezone
+            final int endYear = now.getYear();
+            boolean needsFullUpdate = false;
+            for (int y = startYear; y <= endYear; y++) {
+                final ZonedDateTime val = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_MODIFIED + "." + y);
+                if (val == null) {
+                    needsFullUpdate = true;
+                    break;
+                }
+            }
+            final ZonedDateTime lastUpdated = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_MODIFIED);
+            final int days = settings.getInt(Settings.KEYS.NVD_API_DATAFEED_VALID_FOR_DAYS, 7);
+
+            final String prefix = cacheProperties.getProperty("prefix", "nvdcve-");
+
+            if (!needsFullUpdate && lastUpdated.equals(DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE))) {
+                return updates;
+            } else {
+                updates.put("modified", url + prefix + "-modified.json.gz");
+                if (needsFullUpdate) {
+                    for (int i = startYear; i < endYear; i++) {
+                        if (cacheProperties.containsKey(NVD_API_CACHE_MODIFIED_DATE + "." + i)) {
+                            updates.put(String.valueOf(i), url + prefix + "-" + i + ".json.gz");
+                        }
+                    }
+                } else if (!DateUtil.withinDateRange(lastUpdated, now, days)) {
+                    for (int i = startYear; i <= endYear; i++) {
+                        if (cacheProperties.containsKey(NVD_API_CACHE_MODIFIED_DATE + "." + i)) {
+                            final ZonedDateTime lastModifiedCache = DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + "." + i);
+                            final ZonedDateTime lastModifiedDB = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_MODIFIED + "." + i);
+                            if (lastModifiedDB == null || lastModifiedCache.compareTo(lastModifiedDB) > 0) {
+                                updates.put(String.valueOf(i), url + prefix + "-" + i + ".json.gz");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (updates.size() > 3) {
+            LOGGER.info("NVD API Cache requires several updates; this could take a couple of minutes.");
+        }
+        return updates;
+    }
+
+    /**
+     * Downloads the NVD CVE Meta file properties.
+     *
+     * @param url the URL to the NVD API cache
+     * @return the cache properties
+     * @throws UpdateException thrown if the properties file could not be
+     * downloaded
+     */
+    protected final Properties getRemoteCacheProperties(String url) throws UpdateException {
+        try {
+            final URL u = new URL(url + "cache.properties");
+            final Downloader d = new Downloader(settings);
+            final String content = d.fetchContent(u, true, Settings.KEYS.NVD_API_DATAFEED_USER, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
+            Properties properties = new Properties();
+            properties.load(new StringReader(content));
+            return new Properties();
+        } catch (MalformedURLException ex) {
+            throw new UpdateException("Invalid NVD Cache URL", ex);
+        } catch (DownloadFailedException | TooManyRequestsException | ResourceNotFoundException ex) {
+            throw new UpdateException("Unable to download the NVD API cache.properties", ex);
+        } catch (IOException ex) {
+            throw new UpdateException("Invalid NVD Cache Properties file contents", ex);
+        }
+    }
 }

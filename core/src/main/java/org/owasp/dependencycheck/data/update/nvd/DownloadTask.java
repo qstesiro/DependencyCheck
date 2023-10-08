@@ -17,9 +17,9 @@
  */
 package org.owasp.dependencycheck.data.update.nvd;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.jeremylong.openvulnerability.client.nvd.CveApiJson20;
 import java.net.URL;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -28,21 +28,19 @@ import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.dependencycheck.data.nvdcve.CveDB;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
-import org.owasp.dependencycheck.utils.DownloadFailedException;
+import org.owasp.dependencycheck.data.update.nvd.api.NvdApiProcessor;
 import org.owasp.dependencycheck.utils.Downloader;
-import org.owasp.dependencycheck.utils.ResourceNotFoundException;
 import org.owasp.dependencycheck.utils.Settings;
-import org.owasp.dependencycheck.utils.TooManyRequestsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A callable object to download two files.
+ * A callable object to download the NVD API cache files and start the NvdApiProcessor.
  *
  * @author Jeremy Long
  */
 @ThreadSafe
-public class DownloadTask implements Callable<Future<ProcessTask>> {
+public class DownloadTask implements Callable<Future<NvdApiProcessor>> {
 
     /**
      * The Logger.
@@ -57,22 +55,18 @@ public class DownloadTask implements Callable<Future<ProcessTask>> {
      */
     private final ExecutorService processorService;
     /**
-     * The NVD CVE Meta Data.
+     * The NVD API Cache file URL.
      */
-    private NvdCveInfo nvdCveInfo;
+    private final String url;
     /**
      * A reference to the global settings object.
      */
     private final Settings settings;
-    /**
-     * a file.
-     */
-    private final File file;
 
     /**
      * Simple constructor for the callable download task.
      *
-     * @param nvdCveInfo the NVD CVE info
+     * @param url the file to download
      * @param processor the processor service to submit the downloaded files to
      * @param cveDB the CVE DB to use to store the vulnerability data
      * @param settings a reference to the global settings object; this is
@@ -80,135 +74,49 @@ public class DownloadTask implements Callable<Future<ProcessTask>> {
      * correct reference to the global settings.
      * @throws UpdateException thrown if temporary files could not be created
      */
-    public DownloadTask(NvdCveInfo nvdCveInfo, ExecutorService processor, CveDB cveDB, Settings settings) throws UpdateException {
-        this.nvdCveInfo = nvdCveInfo;
+    public DownloadTask(String url, ExecutorService processor, CveDB cveDB, Settings settings) throws UpdateException {
+        this.url = url;
         this.processorService = processor;
         this.cveDB = cveDB;
         this.settings = settings;
-
-        try {
-            this.file = File.createTempFile("cve" + nvdCveInfo.getId() + '_', ".json.gz", settings.getTempDirectory());
-        } catch (IOException ex) {
-            throw new UpdateException("Unable to create temporary files", ex);
-        }
-    }
-
-    /**
-     * Get the value of nvdCveInfo.
-     *
-     * @return the value of nvdCveInfo
-     */
-    public NvdCveInfo getNvdCveInfo() {
-        return nvdCveInfo;
-    }
-
-    /**
-     * Set the value of nvdCveInfo.
-     *
-     * @param nvdCveInfo new value of nvdCveInfo
-     */
-    public void setNvdCveInfo(NvdCveInfo nvdCveInfo) {
-        this.nvdCveInfo = nvdCveInfo;
-    }
-
-    /**
-     * Get the value of file.
-     *
-     * @return the value of file
-     */
-    public File getFile() {
-        return file;
     }
 
     @SuppressWarnings("BusyWait")
     @Override
-    public Future<ProcessTask> call() throws Exception {
-        final long waitTime = settings.getInt(Settings.KEYS.CVE_DOWNLOAD_WAIT_TIME, 4000);
-        long startDownload = 0;
-        final NvdCache cache = new NvdCache(settings);
+    public Future<NvdApiProcessor> call() throws Exception {
         try {
-            final URL url1 = new URL(nvdCveInfo.getUrl());
-            if (cache.notInCache(url1, file)) {
-                Thread.sleep(waitTime);
-                LOGGER.info("Download Started for NVD CVE - {}", nvdCveInfo.getId());
-                startDownload = System.currentTimeMillis();
-                final int downloadAttempts = 5;
-                for (int x = 2; x <= downloadAttempts && !attemptDownload(url1, x == downloadAttempts); x++) {
-                    LOGGER.info("Download Attempt {} for NVD CVE - {}", x, nvdCveInfo.getId());
-                    Thread.sleep(waitTime * (x / 2));
-                }
-                if (file.isFile() && file.length() > 0) {
-                    LOGGER.info("Download Complete for NVD CVE - {}  ({} ms)", nvdCveInfo.getId(),
-                            System.currentTimeMillis() - startDownload);
-                    cache.storeInCache(url1, file);
-                } else {
-                    throw new DownloadFailedException("Unable to download NVD CVE " + nvdCveInfo.getId());
-                }
-            }
+            final URL u = new URL(url);
+            LOGGER.info("Download Started for NVD Cache - {}", url);
+            long startDownload = System.currentTimeMillis();
+            final Downloader d = new Downloader(settings);
+            final String content = d.fetchContent(u, true, Settings.KEYS.NVD_API_DATAFEED_USER, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
+            final ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            CveApiJson20 data = objectMapper.readValue(content, CveApiJson20.class);
+            
             if (this.processorService == null) {
                 return null;
             }
-            final ProcessTask task = new ProcessTask(cveDB, this, settings);
-            final Future<ProcessTask> val = this.processorService.submit(task);
+            final NvdApiProcessor task = new NvdApiProcessor(cveDB, data.getVulnerabilities(), startDownload);
+            final Future<NvdApiProcessor> val = this.processorService.submit(task);
             return val;
-
         } catch (Throwable ex) {
-            LOGGER.error("Error downloading NVD CVE - {} Reason: {}", nvdCveInfo.getId(), ex.getMessage());
+            LOGGER.error("Error downloading NVD CVE - {} Reason: {}", url, ex.getMessage());
             throw ex;
         } finally {
             settings.cleanup(false);
         }
     }
 
-    private boolean attemptDownload(final URL url1, boolean showLog) throws TooManyRequestsException, ResourceNotFoundException {
-        try {
-            final Downloader downloader = new Downloader(settings);
-            downloader.fetchFile(url1, file, Settings.KEYS.CVE_USER, Settings.KEYS.CVE_PASSWORD);
-        } catch (DownloadFailedException ex) {
-            if (showLog) {
-                LOGGER.error("Download Failed for NVD CVE - {}\nSome CVEs may not be reported. Reason: {}",
-                        nvdCveInfo.getId(), ex.getMessage());
-                if (settings.getString(Settings.KEYS.PROXY_SERVER) == null) {
-                    LOGGER.error("If you are behind a proxy you may need to configure dependency-check to use the proxy.");
-                }
-                LOGGER.debug("", ex);
-            }
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Attempts to delete the files that were downloaded.
-     */
-    public void cleanup() {
-        if (file != null && file.exists() && !file.delete()) {
-            LOGGER.debug("Failed to delete first temporary file {}", file);
-            file.deleteOnExit();
-        }
-    }
-
-    /**
-     * Attempts to delete the files that were downloaded.
-     */
-    public void evictCorruptFileFromCache() {
-        final NvdCache cache = new NvdCache(settings);
-        try {
-            final URL url1 = new URL(nvdCveInfo.getUrl());
-            cache.evictFromCache(url1);
-        } catch (MalformedURLException e) {
-            LOGGER.debug("Ignoring Cache-eviction request for an invalid URL");
-        }
-    }
 
     /**
      * Returns true if the process task is for the modified json file from the
-     * NVD.
+     * NVD API Cache.
      *
      * @return <code>true</code> if the process task is for the modified data;
      * otherwise <code>false</code>
      */
     public boolean isModified() {
-        return StringUtils.containsIgnoreCase(file.toString(), "modified");
+        return StringUtils.containsIgnoreCase(url, "modified");
     }
 }

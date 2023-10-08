@@ -17,6 +17,7 @@
  */
 package org.owasp.dependencycheck.data.update.nvd;
 
+import java.time.ZonedDateTime;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -25,6 +26,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * @author Jeremy Long
  */
 @ThreadSafe
+@Deprecated
 public class NvdCveInfo {
 
     /**
@@ -38,7 +40,7 @@ public class NvdCveInfo {
     /**
      * The timestamp of the file - epoch time.
      */
-    private final long timestamp;
+    private final ZonedDateTime timestamp;
 
     /**
      * Construct a new NVD CVE Info object.
@@ -47,7 +49,7 @@ public class NvdCveInfo {
      * @param url the url
      * @param timestamp the timestamp
      */
-    public NvdCveInfo(String id, String url, long timestamp) {
+    public NvdCveInfo(String id, String url, ZonedDateTime timestamp) {
         this.id = id;
         this.url = url;
         this.timestamp = timestamp;
@@ -76,7 +78,7 @@ public class NvdCveInfo {
      *
      * @return the value of timestamp - epoch time
      */
-    public long getTimestamp() {
+    public ZonedDateTime getTimestamp() {
         return timestamp;
     }
 }
