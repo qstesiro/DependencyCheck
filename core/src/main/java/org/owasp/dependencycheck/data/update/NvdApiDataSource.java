@@ -48,7 +48,6 @@ import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
 import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
 import org.owasp.dependencycheck.data.update.nvd.DownloadTask;
-import org.owasp.dependencycheck.data.update.nvd.ProcessTask;
 import org.owasp.dependencycheck.data.update.nvd.api.NvdApiProcessor;
 import org.owasp.dependencycheck.utils.DateUtil;
 import org.owasp.dependencycheck.utils.DownloadFailedException;
@@ -86,7 +85,9 @@ public class NvdApiDataSource implements CachedWebDataSource {
      * The properties obtained from the database.
      */
     private DatabaseProperties dbProperties = null;
-
+    /**
+     * The key for the NVD API cache properties file's last modified date.
+     */
     private static final String NVD_API_CACHE_MODIFIED_DATE = "lastModifiedDate";
 
     @Override
@@ -98,7 +99,7 @@ public class NvdApiDataSource implements CachedWebDataSource {
         }
         dbProperties = cveDb.getDatabaseProperties();
 
-        String nvdDataFeedUrl = settings.getString(Settings.KEYS.NVD_API_DATAFEED_URL);
+        final String nvdDataFeedUrl = settings.getString(Settings.KEYS.NVD_API_DATAFEED_URL);
         if (nvdDataFeedUrl != null) {
             return processDatafeed(nvdDataFeedUrl);
         }
@@ -187,20 +188,24 @@ public class NvdApiDataSource implements CachedWebDataSource {
         return updatesMade;
     }
 
-    private void storeLastModifiedDates(final ZonedDateTime now, final Properties cacheProperties, final Map<String, String> updateable) throws UpdateException {
+    private void storeLastModifiedDates(final ZonedDateTime now, final Properties cacheProperties,
+            final Map<String, String> updateable) throws UpdateException {
         dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_CHECKED, now);
-        dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_MODIFIED, DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + ".modified"));
+        dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_MODIFIED, DatabaseProperties.getTimestamp(cacheProperties,
+                NVD_API_CACHE_MODIFIED_DATE + ".modified"));
         for (String entry : updateable.keySet()) {
-            ZonedDateTime date = DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + "." + entry);
+            final ZonedDateTime date = DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + "." + entry);
             dbProperties.save(DatabaseProperties.NVD_CACHE_LAST_MODIFIED + "." + entry, date);
         }
     }
 
-    private DownloadTask startDownloads(final Map<String, String> updateable, ExecutorService processingExecutorService, DownloadTask runLast, final Set<Future<Future<NvdApiProcessor>>> downloadFutures, ExecutorService downloadExecutorService) throws UpdateException {
+    private DownloadTask startDownloads(final Map<String, String> updateable, ExecutorService processingExecutorService, DownloadTask runLast,
+            final Set<Future<Future<NvdApiProcessor>>> downloadFutures, ExecutorService downloadExecutorService) throws UpdateException {
+        DownloadTask lastCall = runLast;
         for (Map.Entry<String, String> cve : updateable.entrySet()) {
             final DownloadTask call = new DownloadTask(cve.getValue(), processingExecutorService, cveDb, settings);
             if (call.isModified()) {
-                runLast = call;
+                lastCall = call;
             } else {
                 final boolean added = downloadFutures.add(downloadExecutorService.submit(call));
                 if (!added) {
@@ -208,7 +213,7 @@ public class NvdApiDataSource implements CachedWebDataSource {
                 }
             }
         }
-        return runLast;
+        return lastCall;
     }
 
     private void processFuture(final Set<Future<NvdApiProcessor>> processFutures) throws UpdateException {
@@ -250,12 +255,12 @@ public class NvdApiDataSource implements CachedWebDataSource {
 
     private boolean processApi() throws UpdateException {
         ZonedDateTime lastModifiedRequest = dbProperties.getTimestamp(DatabaseProperties.NVD_API_LAST_MODIFIED);
-        NvdCveClientBuilder builder = NvdCveClientBuilder.aNvdCveApi();
+        final NvdCveClientBuilder builder = NvdCveClientBuilder.aNvdCveApi();
         if (lastModifiedRequest != null) {
-            ZonedDateTime end = lastModifiedRequest.minusDays(-120);
+            final ZonedDateTime end = lastModifiedRequest.minusDays(-120);
             builder.withLastModifiedFilter(lastModifiedRequest, end);
         }
-        String key = settings.getString(Settings.KEYS.NVD_API_KEY);
+        final String key = settings.getString(Settings.KEYS.NVD_API_KEY);
         if (key != null) {
             builder.withApiKey(key)
                     .withDelay(3000)
@@ -264,14 +269,14 @@ public class NvdApiDataSource implements CachedWebDataSource {
         ExecutorService processingExecutorService = null;
         try {
             processingExecutorService = Executors.newFixedThreadPool(PROCESSING_THREAD_POOL_SIZE);
-            List<Future<NvdApiProcessor>> submitted = new ArrayList<>();
+            final List<Future<NvdApiProcessor>> submitted = new ArrayList<>();
             int errorCount = 0;
             try (NvdCveClient api = builder.build()) {
                 while (api.hasNext()) {
                     try {
-                        Collection<DefCveItem> items = api.next();
+                        final Collection<DefCveItem> items = api.next();
                         if (items != null && !items.isEmpty()) {
-                            Future<NvdApiProcessor> f = processingExecutorService.submit(new NvdApiProcessor(cveDb, items));
+                            final Future<NvdApiProcessor> f = processingExecutorService.submit(new NvdApiProcessor(cveDb, items));
                             submitted.add(f);
                             errorCount = 0;
                         }
@@ -381,8 +386,8 @@ public class NvdApiDataSource implements CachedWebDataSource {
             final long validForSeconds = validForHours * 60L * 60L;
             final ZonedDateTime lastChecked = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_CHECKED);
             final ZonedDateTime now = ZonedDateTime.now(ZoneId.of("UTC"));
-            Duration duration = Duration.between(now, lastChecked);
-            long difference = duration.getSeconds();
+            final Duration duration = Duration.between(now, lastChecked);
+            final long difference = duration.getSeconds();
             proceed = difference > validForSeconds;
             if (!proceed) {
                 LOGGER.info("Skipping NVD API Cache check since last check was within {} hours.", validForHours);
@@ -409,6 +414,7 @@ public class NvdApiDataSource implements CachedWebDataSource {
      *
      * @param url the URL of the NVD API cache
      * @param cacheProperties the properties from the remote NVD API cache
+     * @param now the start time of the update process
      * @return the map of key to URLs - where the key is the year or `modified`
      * @throws UpdateException Is thrown if there is an issue with the last
      * updated properties file
@@ -448,7 +454,8 @@ public class NvdApiDataSource implements CachedWebDataSource {
                 } else if (!DateUtil.withinDateRange(lastUpdated, now, days)) {
                     for (int i = startYear; i <= endYear; i++) {
                         if (cacheProperties.containsKey(NVD_API_CACHE_MODIFIED_DATE + "." + i)) {
-                            final ZonedDateTime lastModifiedCache = DatabaseProperties.getTimestamp(cacheProperties, NVD_API_CACHE_MODIFIED_DATE + "." + i);
+                            final ZonedDateTime lastModifiedCache = DatabaseProperties.getTimestamp(cacheProperties,
+                                    NVD_API_CACHE_MODIFIED_DATE + "." + i);
                             final ZonedDateTime lastModifiedDB = dbProperties.getTimestamp(DatabaseProperties.NVD_CACHE_LAST_MODIFIED + "." + i);
                             if (lastModifiedDB == null || lastModifiedCache.compareTo(lastModifiedDB) > 0) {
                                 updates.put(String.valueOf(i), url + prefix + "-" + i + ".json.gz");
@@ -477,7 +484,7 @@ public class NvdApiDataSource implements CachedWebDataSource {
             final URL u = new URL(url + "cache.properties");
             final Downloader d = new Downloader(settings);
             final String content = d.fetchContent(u, true, Settings.KEYS.NVD_API_DATAFEED_USER, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
-            Properties properties = new Properties();
+            final Properties properties = new Properties();
             properties.load(new StringReader(content));
             return new Properties();
         } catch (MalformedURLException ex) {

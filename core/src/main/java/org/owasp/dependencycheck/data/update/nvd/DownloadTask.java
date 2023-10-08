@@ -35,7 +35,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A callable object to download the NVD API cache files and start the NvdApiProcessor.
+ * A callable object to download the NVD API cache files and start the
+ * NvdApiProcessor.
  *
  * @author Jeremy Long
  */
@@ -87,13 +88,13 @@ public class DownloadTask implements Callable<Future<NvdApiProcessor>> {
         try {
             final URL u = new URL(url);
             LOGGER.info("Download Started for NVD Cache - {}", url);
-            long startDownload = System.currentTimeMillis();
+            final long startDownload = System.currentTimeMillis();
             final Downloader d = new Downloader(settings);
             final String content = d.fetchContent(u, true, Settings.KEYS.NVD_API_DATAFEED_USER, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
             final ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
-            CveApiJson20 data = objectMapper.readValue(content, CveApiJson20.class);
-            
+            final CveApiJson20 data = objectMapper.readValue(content, CveApiJson20.class);
+
             if (this.processorService == null) {
                 return null;
             }
@@ -107,7 +108,6 @@ public class DownloadTask implements Callable<Future<NvdApiProcessor>> {
             settings.cleanup(false);
         }
     }
-
 
     /**
      * Returns true if the process task is for the modified json file from the

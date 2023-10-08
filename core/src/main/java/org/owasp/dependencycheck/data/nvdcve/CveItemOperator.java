@@ -223,7 +223,7 @@ public class CveItemOperator {
                 .flatMap(List::stream)
                 .map(Node::getCpeMatch)
                 .flatMap(List::stream)
-                .filter(cpe -> cpe.getCriteria()!= null)
+                .filter(cpe -> cpe.getCriteria() != null)
                 .anyMatch(cpe -> cpe.getCriteria().startsWith(cpeStartsWithFilter));
     }
 }

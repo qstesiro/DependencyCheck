@@ -17,54 +17,54 @@
  */
 package org.owasp.dependencycheck.data.update;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+//import java.io.BufferedReader;
+//import java.io.BufferedWriter;
+//import java.io.File;
+//import java.io.FileInputStream;
+//import java.io.FileOutputStream;
+//import java.io.IOException;
+//import java.io.InputStreamReader;
+//import java.io.OutputStreamWriter;
+//import java.net.MalformedURLException;
+//import java.time.ZoneOffset;
+//import java.time.ZonedDateTime;
+//import java.util.HashSet;
+//import java.util.Set;
+//import java.net.URL;
+//import java.nio.charset.StandardCharsets;
+//import java.util.ArrayList;
+//import java.util.List;
+//import java.util.concurrent.ExecutionException;
+//import java.util.concurrent.ExecutorService;
+//import java.util.concurrent.Executors;
+//import java.util.concurrent.Future;
+//import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
-import org.apache.commons.io.FileUtils;
+//import org.apache.commons.io.FileUtils;
 
 import org.owasp.dependencycheck.Engine;
-import org.owasp.dependencycheck.data.nvd.json.MetaProperties;
-import org.owasp.dependencycheck.data.nvdcve.CveDB;
-import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
-import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
-
-import static org.owasp.dependencycheck.data.nvdcve.DatabaseProperties.MODIFIED;
-
-import org.owasp.dependencycheck.data.update.exception.InvalidDataException;
+//import org.owasp.dependencycheck.data.nvd.json.MetaProperties;
+//import org.owasp.dependencycheck.data.nvdcve.CveDB;
+//import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
+//import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
+//
+//import static org.owasp.dependencycheck.data.nvdcve.DatabaseProperties.MODIFIED;
+//
+//import org.owasp.dependencycheck.data.update.exception.InvalidDataException;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
-import org.owasp.dependencycheck.data.update.nvd.DownloadTask;
-import org.owasp.dependencycheck.data.update.nvd.NvdCache;
-import org.owasp.dependencycheck.data.update.nvd.NvdCveInfo;
-import org.owasp.dependencycheck.data.update.nvd.ProcessTask;
-import org.owasp.dependencycheck.utils.DateUtil;
-import org.owasp.dependencycheck.utils.DownloadFailedException;
-import org.owasp.dependencycheck.utils.Downloader;
-import org.owasp.dependencycheck.utils.InvalidSettingException;
-import org.owasp.dependencycheck.utils.ResourceNotFoundException;
-import org.owasp.dependencycheck.utils.Settings;
-import org.owasp.dependencycheck.utils.TooManyRequestsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.owasp.dependencycheck.data.update.nvd.DownloadTask;
+//import org.owasp.dependencycheck.data.update.nvd.NvdCache;
+//import org.owasp.dependencycheck.data.update.nvd.NvdCveInfo;
+//import org.owasp.dependencycheck.data.update.nvd.ProcessTask;
+//import org.owasp.dependencycheck.utils.DateUtil;
+//import org.owasp.dependencycheck.utils.DownloadFailedException;
+//import org.owasp.dependencycheck.utils.Downloader;
+//import org.owasp.dependencycheck.utils.InvalidSettingException;
+//import org.owasp.dependencycheck.utils.ResourceNotFoundException;
+//import org.owasp.dependencycheck.utils.Settings;
+//import org.owasp.dependencycheck.utils.TooManyRequestsException;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 /**
  * Class responsible for updating the NVD CVE data.

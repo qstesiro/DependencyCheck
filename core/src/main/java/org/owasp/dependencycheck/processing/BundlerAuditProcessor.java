@@ -235,14 +235,15 @@ public class BundlerAuditProcessor extends Processor<InputStream> {
                 }
             } else {
                 if ("High".equalsIgnoreCase(criticality)) {
-                    score =  8.5;
+                    score = 8.5;
                 } else if ("Medium".equalsIgnoreCase(criticality)) {
                     score = 5.5;
                 } else if ("Low".equalsIgnoreCase(criticality)) {
                     score = 2.0;
                 }
-                CvssV2Data cvssData = new CvssV2Data(null, null, null, null, null, null, null, null, score, criticality.toUpperCase(), null, null, null, null, null, null, null, null, null, null);
-                CvssV2 cvssV2 = new CvssV2(null, null, cvssData, criticality.toUpperCase(), null, null, null, null, null, null, null);
+                final CvssV2Data cvssData = new CvssV2Data(null, null, null, null, null, null, null, null, score, criticality.toUpperCase(),
+                        null, null, null, null, null, null, null, null, null, null);
+                final CvssV2 cvssV2 = new CvssV2(null, null, cvssData, criticality.toUpperCase(), null, null, null, null, null, null, null);
                 vulnerability.setCvssV2(cvssV2);
                 vulnerability.setUnscoredSeverity(null);
             }
@@ -292,7 +293,7 @@ public class BundlerAuditProcessor extends Processor<InputStream> {
                     .version(version).build();
             vulnerability.addVulnerableSoftware(vs);
             vulnerability.setMatchedVulnerableSoftware(vs);
-            Double score = -1.0;
+            final Double score = -1.0;
             vulnerability.setUnscoredSeverity("UNKNOWN");
         }
         LOGGER.debug("bundle-audit ({}): {}", parentName, nextLine);

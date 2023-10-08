@@ -882,7 +882,7 @@ public class Check extends Update {
      */
     public Boolean isNugetconfAnalyzerEnabled() {
         return nugetconfAnalyzerEnabled;
-    }    
+    }
 
     /**
      * Sets whether or not the analyzer is enabled.

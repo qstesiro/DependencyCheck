@@ -23,8 +23,6 @@ import org.sonatype.ossindex.service.api.componentreport.ComponentReport;
 import org.sonatype.ossindex.service.api.componentreport.ComponentReportVulnerability;
 import org.sonatype.ossindex.service.api.cvss.Cvss2Severity;
 import org.sonatype.ossindex.service.api.cvss.Cvss2Vector;
-import org.sonatype.ossindex.service.api.cvss.Cvss3Severity;
-import org.sonatype.ossindex.service.api.cvss.Cvss3Vector;
 import org.sonatype.ossindex.service.api.cvss.CvssVector;
 import org.sonatype.ossindex.service.api.cvss.CvssVectorFactory;
 import org.sonatype.ossindex.service.client.OssindexClient;
@@ -332,40 +330,40 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
                 if (cvssVector instanceof Cvss2Vector) {
                     String tmp = metrics.get(Cvss2Vector.ACCESS_VECTOR);
                     CvssV2Data.AccessVectorType accessVector = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         accessVector = CvssV2Data.AccessVectorType.fromValue(tmp);
                     }
                     tmp = metrics.get(Cvss2Vector.ACCESS_COMPLEXITY);
                     CvssV2Data.AccessComplexityType accessComplexity = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         accessComplexity = CvssV2Data.AccessComplexityType.fromValue(tmp);
                     }
                     tmp = metrics.get(Cvss2Vector.AUTHENTICATION);
                     CvssV2Data.AuthenticationType authentication = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         authentication = CvssV2Data.AuthenticationType.fromValue(tmp);
                     }
                     tmp = metrics.get(Cvss2Vector.CONFIDENTIALITY_IMPACT);
                     CvssV2Data.CiaType confidentialityImpact = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         confidentialityImpact = CvssV2Data.CiaType.fromValue(tmp);
                     }
                     tmp = metrics.get(Cvss2Vector.INTEGRITY_IMPACT);
                     CvssV2Data.CiaType integrityImpact = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         integrityImpact = CvssV2Data.CiaType.fromValue(tmp);
                     }
                     tmp = metrics.get(Cvss2Vector.AVAILABILITY_IMPACT);
                     CvssV2Data.CiaType availabilityImpact = null;
-                    if (tmp!=null) {  
+                    if (tmp != null) {
                         availabilityImpact = CvssV2Data.CiaType.fromValue(tmp);
                     }
-                    String severity = Cvss2Severity.of((float)cvssScore).name().toUpperCase();
-                    CvssV2Data cvssData = new CvssV2Data("2.0", source.getCvssVector(), accessVector, 
-                            accessComplexity, authentication, confidentialityImpact, 
+                    final String severity = Cvss2Severity.of((float) cvssScore).name().toUpperCase();
+                    final CvssV2Data cvssData = new CvssV2Data("2.0", source.getCvssVector(), accessVector,
+                            accessComplexity, authentication, confidentialityImpact,
                             integrityImpact, availabilityImpact, cvssScore,
                             severity, null, null, null, null, null, null, null, null, null, null);
-                    CvssV2 cvssV2 = new CvssV2(null, null, cvssData, severity, null, null, null, null, null, null, null);
+                    final CvssV2 cvssV2 = new CvssV2(null, null, cvssData, severity, null, null, null, null, null, null, null);
                     result.setCvssV2(cvssV2);
                 } else {
                     LOG.warn("Unsupported CVSS vector: {}", cvssVector);

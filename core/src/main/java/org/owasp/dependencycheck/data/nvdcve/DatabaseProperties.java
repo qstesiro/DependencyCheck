@@ -44,14 +44,17 @@ public class DatabaseProperties {
      * The Logger.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseProperties.class);
-
     /**
      * The last modified request data for the NVD API.
      */
     public static final String NVD_API_LAST_MODIFIED = "nvd.api.last.modified";
-
+    /**
+     * The date the NVD cache was last checked for an update.
+     */
     public static final String NVD_CACHE_LAST_CHECKED = "nvd.cache.last.checked";
-
+    /**
+     * The date the NVD cache data was last modified/updated.
+     */
     public static final String NVD_CACHE_LAST_MODIFIED = "nvd.cache.last.modified";
 
     // TODO DELETE START--------------------------------------------------------
@@ -196,7 +199,7 @@ public class DatabaseProperties {
      * @return the zoned date time
      */
     public ZonedDateTime getTimestamp(String key) {
-        return DatabaseProperties.getTimestamp(properties,key);
+        return DatabaseProperties.getTimestamp(properties, key);
     }
 
     /**
@@ -206,11 +209,10 @@ public class DatabaseProperties {
      * @param timestamp the zoned date time
      */
     public void save(String key, ZonedDateTime timestamp) throws UpdateException {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
         save(key, dtf.format(timestamp));
     }
 
-    
     /**
      * Retrieves a zoned date time.
      *
@@ -219,9 +221,9 @@ public class DatabaseProperties {
      * @return the zoned date time
      */
     public static ZonedDateTime getTimestamp(Properties properties, String key) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
+        final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ssX");
         if (properties.contains(key)) {
-            String value = properties.getProperty(key);
+            final String value = properties.getProperty(key);
             return ZonedDateTime.parse(value, dtf);
         }
         return null;

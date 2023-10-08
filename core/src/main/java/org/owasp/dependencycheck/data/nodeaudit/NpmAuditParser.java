@@ -18,20 +18,16 @@
 package org.owasp.dependencycheck.data.nodeaudit;
 
 import io.github.jeremylong.openvulnerability.client.nvd.CvssV3;
-import io.github.jeremylong.openvulnerability.client.nvd.CvssV3Data;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import org.json.JSONException;
 import org.owasp.dependencycheck.utils.CvssUtil;
-import org.sonatype.ossindex.service.api.cvss.Cvss3Severity;
 
 /**
  * Parser for NPM Audit API response. This parser is derived from:

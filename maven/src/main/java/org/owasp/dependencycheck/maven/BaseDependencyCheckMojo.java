@@ -615,7 +615,7 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     @SuppressWarnings("CanBeFinal")
     @Parameter(property = "libmanAnalyzerEnabled")
     private Boolean libmanAnalyzerEnabled;
-    
+
     /**
      * Whether or not the Central Analyzer is enabled.
      */
@@ -1061,10 +1061,12 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     @SuppressWarnings("CanBeFinal")
     @Parameter(property = "odc.dependencies.scan", defaultValue = "true", required = false)
     private boolean scanDependencies = true;
-
+    /**
+     * The proxy configuration.
+     */
     @Parameter
     private ProxyConfig proxy;
-    
+
     // </editor-fold>
     //<editor-fold defaultstate="collapsed" desc="Base Maven implementation">
     /**
@@ -2183,9 +2185,8 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
             settings.setStringIfNotNull(Settings.KEYS.PROXY_USERNAME, userName);
             settings.setStringIfNotNull(Settings.KEYS.PROXY_PASSWORD, password);
             settings.setStringIfNotNull(Settings.KEYS.PROXY_NON_PROXY_HOSTS, mavenProxy.getNonProxyHosts());
-        }
-        // or use standard Java system properties
-        else if (System.getProperty("http.proxyHost") != null) {
+        } else if (System.getProperty("http.proxyHost") != null) {
+            //else use standard Java system properties
             settings.setString(Settings.KEYS.PROXY_SERVER, System.getProperty("http.proxyHost", ""));
             if (System.getProperty("http.proxyPort") != null) {
                 settings.setString(Settings.KEYS.PROXY_PORT, System.getProperty("http.proxyPort"));
@@ -2199,15 +2200,14 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
             if (System.getProperty("http.nonProxyHosts") != null) {
                 settings.setString(Settings.KEYS.PROXY_NON_PROXY_HOSTS, System.getProperty("http.nonProxyHosts"));
             }
-        }
-        // or use configured <proxy>
-        else if ( this.proxy != null && this.proxy.host != null) {
+        } else if (this.proxy != null && this.proxy.host != null) {
+            // or use configured <proxy>
             settings.setString(Settings.KEYS.PROXY_SERVER, this.proxy.host);
             settings.setString(Settings.KEYS.PROXY_PORT, Integer.toString(this.proxy.port));
             // user name and password from <server> entry settings.xml
             configureServerCredentials(this.proxy.serverId, Settings.KEYS.PROXY_USERNAME, Settings.KEYS.PROXY_PASSWORD);
         }
-        
+
         final String[] suppressions = determineSuppressions();
         settings.setArrayIfNotEmpty(Settings.KEYS.SUPPRESSION_FILE, suppressions);
         settings.setBooleanIfNotNull(Settings.KEYS.UPDATE_VERSION_CHECK_ENABLED, versionCheckEnabled);
@@ -2603,7 +2603,7 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         for (Dependency d : dependencies) {
             boolean addName = true;
             for (Vulnerability v : d.getVulnerabilities()) {
-                final Double cvssV2 = v.getCvssV2() != null && v.getCvssV2().getCvssData() != null  && v.getCvssV2().getCvssData().getBaseScore() != null ? v.getCvssV2().getCvssData().getBaseScore() : -1;
+                final Double cvssV2 = v.getCvssV2() != null && v.getCvssV2().getCvssData() != null && v.getCvssV2().getCvssData().getBaseScore() != null ? v.getCvssV2().getCvssData().getBaseScore() : -1;
                 final Double cvssV3 = v.getCvssV3() != null && v.getCvssV3().getCvssData() != null && v.getCvssV3().getCvssData().getBaseScore() != null ? v.getCvssV3().getCvssData().getBaseScore() : -1;
                 final Double unscoredCvss = v.getUnscoredSeverity() != null ? SeverityUtil.estimateCvssV2(v.getUnscoredSeverity()) : -1;
 

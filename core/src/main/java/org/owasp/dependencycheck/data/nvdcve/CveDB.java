@@ -57,7 +57,6 @@ import io.github.jeremylong.openvulnerability.client.nvd.CvssV2Data;
 import io.github.jeremylong.openvulnerability.client.nvd.CvssV3;
 import io.github.jeremylong.openvulnerability.client.nvd.CvssV3Data;
 import io.github.jeremylong.openvulnerability.client.nvd.LangString;
-import io.github.jeremylong.openvulnerability.client.nvd.Metrics;
 import io.github.jeremylong.openvulnerability.client.nvd.Node;
 import io.github.jeremylong.openvulnerability.client.nvd.Reference;
 import io.github.jeremylong.openvulnerability.client.nvd.Weakness;
@@ -501,7 +500,9 @@ public final class CveDB implements AutoCloseable {
      */
     public Set<Pair<String, String>> getVendorProductList() throws DatabaseException {
         final Set<Pair<String, String>> data = new HashSet<>();
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement ps = getPreparedStatement(conn, SELECT_VENDOR_PRODUCT_LIST); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement ps = getPreparedStatement(conn, SELECT_VENDOR_PRODUCT_LIST);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 data.add(new Pair<>(rs.getString(1), rs.getString(2)));
             }
@@ -523,7 +524,9 @@ public final class CveDB implements AutoCloseable {
      */
     public Set<Pair<String, String>> getVendorProductListForNode() throws DatabaseException {
         final Set<Pair<String, String>> data = new HashSet<>();
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement ps = getPreparedStatement(conn, SELECT_VENDOR_PRODUCT_LIST_FOR_NODE); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement ps = getPreparedStatement(conn, SELECT_VENDOR_PRODUCT_LIST_FOR_NODE);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 data.add(new Pair<>(rs.getString(1), rs.getString(2)));
             }
@@ -541,7 +544,9 @@ public final class CveDB implements AutoCloseable {
      */
     public Properties getProperties() {
         final Properties prop = new Properties();
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement ps = getPreparedStatement(conn, SELECT_PROPERTIES); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement ps = getPreparedStatement(conn, SELECT_PROPERTIES);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 prop.setProperty(rs.getString(1), rs.getString(2));
             }
@@ -780,7 +785,15 @@ public final class CveDB implements AutoCloseable {
 
                         final CvssV3Data cvssData = new CvssV3Data(version, vector, attackVector, attackComplexity, privilegesRequired,
                                 userInteraction, scope, confidentialityImpact, integrityImpact, availabilityImpact,
-                                rsV.getDouble(29), baseSeverity, CvssV3Data.ExploitCodeMaturityType.PROOF_OF_CONCEPT, CvssV3Data.RemediationLevelType.NOT_DEFINED, CvssV3Data.ConfidenceType.REASONABLE, 0.0, CvssV3Data.SeverityType.MEDIUM, CvssV3Data.CiaRequirementType.NOT_DEFINED, CvssV3Data.CiaRequirementType.NOT_DEFINED, CvssV3Data.CiaRequirementType.NOT_DEFINED, CvssV3Data.ModifiedAttackVectorType.ADJACENT_NETWORK, CvssV3Data.ModifiedAttackComplexityType.NOT_DEFINED, CvssV3Data.ModifiedPrivilegesRequiredType.NOT_DEFINED, CvssV3Data.ModifiedUserInteractionType.NOT_DEFINED, CvssV3Data.ModifiedScopeType.NOT_DEFINED, CvssV3Data.ModifiedCiaType.NOT_DEFINED, CvssV3Data.ModifiedCiaType.NOT_DEFINED, CvssV3Data.ModifiedCiaType.NOT_DEFINED, 1.0, CvssV3Data.SeverityType.NONE);
+                                rsV.getDouble(29), baseSeverity, CvssV3Data.ExploitCodeMaturityType.PROOF_OF_CONCEPT,
+                                CvssV3Data.RemediationLevelType.NOT_DEFINED, CvssV3Data.ConfidenceType.REASONABLE, 0.0,
+                                CvssV3Data.SeverityType.MEDIUM, CvssV3Data.CiaRequirementType.NOT_DEFINED,
+                                CvssV3Data.CiaRequirementType.NOT_DEFINED, CvssV3Data.CiaRequirementType.NOT_DEFINED,
+                                CvssV3Data.ModifiedAttackVectorType.ADJACENT_NETWORK, CvssV3Data.ModifiedAttackComplexityType.NOT_DEFINED,
+                                CvssV3Data.ModifiedPrivilegesRequiredType.NOT_DEFINED, CvssV3Data.ModifiedUserInteractionType.NOT_DEFINED,
+                                CvssV3Data.ModifiedScopeType.NOT_DEFINED, CvssV3Data.ModifiedCiaType.NOT_DEFINED,
+                                CvssV3Data.ModifiedCiaType.NOT_DEFINED, CvssV3Data.ModifiedCiaType.NOT_DEFINED, 1.0,
+                                CvssV3Data.SeverityType.NONE);
                         final CvssV3 cvss = new CvssV3(null, null, cvssData, rsV.getDouble(19), rsV.getDouble(20));
                         vuln.setCvssV3(cvss);
                     }
@@ -871,7 +884,9 @@ public final class CveDB implements AutoCloseable {
 
     private void loadCpeEcosystemCache() {
         final Map<Pair<String, String>, String> map = new HashMap<>();
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement ps = getPreparedStatement(conn, SELECT_CPE_ECOSYSTEM); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement ps = getPreparedStatement(conn, SELECT_CPE_ECOSYSTEM);
+                ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 final Pair<String, String> key = new Pair<>(rs.getString(1), rs.getString(2));
                 final String value = rs.getString(3);
@@ -941,7 +956,7 @@ public final class CveDB implements AutoCloseable {
                 optCvssv2 = cve.getCve().getMetrics().getCvssMetricV2().stream().sorted(Comparator.comparing(CvssV2::getType)).findFirst();
             }
             if (optCvssv2 != null && optCvssv2.isPresent()) {
-                CvssV2 cvssv2 = optCvssv2.get();
+                final CvssV2 cvssv2 = optCvssv2.get();
                 setUpdateColumn(callUpdate, 3, cvssv2.getBaseSeverity());
                 setUpdateColumn(callUpdate, 4, cvssv2.getExploitabilityScore());
                 setUpdateColumn(callUpdate, 5, cvssv2.getImpactScore());
@@ -1054,7 +1069,8 @@ public final class CveDB implements AutoCloseable {
      * @throws SQLException thrown if there is an error inserting the data
      */
     private void updateVulnerabilityInsertCwe(int vulnerabilityId, DefCveItem cve) throws SQLException {
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement insertCWE = getPreparedStatement(conn, INSERT_CWE, vulnerabilityId)) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement insertCWE = getPreparedStatement(conn, INSERT_CWE, vulnerabilityId)) {
             for (Weakness weakness : cve.getCve().getWeaknesses()) {
                 for (LangString desc : weakness.getDescription()) {
                     if ("en".equals(desc.getLang())) {
@@ -1082,7 +1098,8 @@ public final class CveDB implements AutoCloseable {
      * vulnerability
      */
     private void deleteVulnerability(String cve) throws SQLException {
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement deleteVulnerability = getPreparedStatement(conn, DELETE_VULNERABILITY, cve)) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement deleteVulnerability = getPreparedStatement(conn, DELETE_VULNERABILITY, cve)) {
             deleteVulnerability.executeUpdate();
         }
     }
@@ -1097,7 +1114,8 @@ public final class CveDB implements AutoCloseable {
     public void updateKnownExploitedVulnerabilities(
             List<org.owasp.dependencycheck.data.knownexploited.json.Vulnerability> vulnerabilities)
             throws DatabaseException, SQLException {
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement mergeKnownVulnerability = getPreparedStatement(conn, MERGE_KNOWN_EXPLOITED)) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement mergeKnownVulnerability = getPreparedStatement(conn, MERGE_KNOWN_EXPLOITED)) {
             int ctr = 0;
             for (org.owasp.dependencycheck.data.knownexploited.json.Vulnerability v : vulnerabilities) {
                 mergeKnownVulnerability.setString(1, v.getCveID());
@@ -1296,7 +1314,7 @@ public final class CveDB implements AutoCloseable {
      * CpeMatch into a CPE object
      */
     private Cpe parseCpe(CpeMatch cpe, String cveId) throws DatabaseException {
-        Cpe parsedCpe;
+        final Cpe parsedCpe;
         try {
             //the replace is a hack as the NVD does not properly escape backslashes in their JSON
             parsedCpe = CpeParser.parse(cpe.getCriteria(), true);
@@ -1368,7 +1386,9 @@ public final class CveDB implements AutoCloseable {
      * @return <code>true</code> if data exists; otherwise <code>false</code>
      */
     public boolean dataExists() {
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement cs = getPreparedStatement(conn, COUNT_CPE); ResultSet rs = cs.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement cs = getPreparedStatement(conn, COUNT_CPE);
+                ResultSet rs = cs.executeQuery()) {
             if (rs.next() && rs.getInt(1) > 0) {
                 return true;
             }
@@ -1397,7 +1417,10 @@ public final class CveDB implements AutoCloseable {
     public void cleanupDatabase() {
         LOGGER.info("Begin database maintenance");
         final long start = System.currentTimeMillis();
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement psOrphans = getPreparedStatement(conn, CLEANUP_ORPHANS); PreparedStatement psEcosystem = getPreparedStatement(conn, UPDATE_ECOSYSTEM); PreparedStatement psEcosystem2 = getPreparedStatement(conn, UPDATE_ECOSYSTEM2)) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement psOrphans = getPreparedStatement(conn, CLEANUP_ORPHANS);
+                PreparedStatement psEcosystem = getPreparedStatement(conn, UPDATE_ECOSYSTEM);
+                PreparedStatement psEcosystem2 = getPreparedStatement(conn, UPDATE_ECOSYSTEM2)) {
             if (psEcosystem != null) {
                 final int count = psEcosystem.executeUpdate();
                 if (count > 0) {
@@ -1526,11 +1549,13 @@ public final class CveDB implements AutoCloseable {
     public Map<String, org.owasp.dependencycheck.data.knownexploited.json.Vulnerability> getknownExploitedVulnerabilities() {
         final Map<String, org.owasp.dependencycheck.data.knownexploited.json.Vulnerability> known = new HashMap<>();
 
-        try (Connection conn = databaseManager.getConnection(); PreparedStatement ps = getPreparedStatement(conn, SELECT_KNOWN_EXPLOITED_VULNERABILITIES); ResultSet rs = ps.executeQuery()) {
+        try (Connection conn = databaseManager.getConnection();
+                PreparedStatement ps = getPreparedStatement(conn, SELECT_KNOWN_EXPLOITED_VULNERABILITIES);
+                ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                final org.owasp.dependencycheck.data.knownexploited.json.Vulnerability kev
-                        = new org.owasp.dependencycheck.data.knownexploited.json.Vulnerability();
+                final org.owasp.dependencycheck.data.knownexploited.json.Vulnerability kev =
+                        new org.owasp.dependencycheck.data.knownexploited.json.Vulnerability();
                 kev.setCveID(rs.getString(1));
                 kev.setVendorProject(rs.getString(2));
                 kev.setProduct(rs.getString(3));

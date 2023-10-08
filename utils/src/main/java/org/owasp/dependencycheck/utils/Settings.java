@@ -38,8 +38,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.ProtectionDomain;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -163,7 +161,7 @@ public final class Settings {
          * be imported.
          */
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
-        
+
         /**
          * API Key for the NVD API.
          */
@@ -281,7 +279,7 @@ public final class Settings {
         //----------------------------------------------------------------------
         //DELETE END
         //----------------------------------------------------------------------
-        
+
         /**
          * The properties key that indicates how often the CPE data needs to be
          * updated.

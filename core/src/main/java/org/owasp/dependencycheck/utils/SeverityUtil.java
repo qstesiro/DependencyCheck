@@ -27,9 +27,21 @@ import org.slf4j.LoggerFactory;
  */
 public final class SeverityUtil {
 
+    /**
+     * The cutoff for high severity.
+     */
     private static final Double HIGH = 10.0;
+    /**
+     * The cutoff for medium severity.
+     */
     private static final Double MEDIUM = 6.9;
+    /**
+     * The cutoff for low severity.
+     */
     private static final Double LOW = 3.9;
+    /**
+     * The cutoff for none severity.
+     */
     private static final Double NONE = 0.0;
     /**
      * The logger.
@@ -71,11 +83,13 @@ public final class SeverityUtil {
     }
 
     /**
-     * Converts a textual severity to the text that should be used to signal
-     * it in a report.
+     * Converts a textual severity to the text that should be used to signal it
+     * in a report.
+     *
      * @param severity The textual unscored severity
-     * @return The severity when properly recognized, otherwise the severity extended with a remark that it was not recognized and
-     *  assumed to represent a critical severity.
+     * @return The severity when properly recognized, otherwise the severity
+     * extended with a remark that it was not recognized and assumed to
+     * represent a critical severity.
      */
     public static String unscoredToSeveritytext(final String severity) {
         switch (Severity.forUnscored(severity)) {
@@ -98,18 +112,22 @@ public final class SeverityUtil {
     }
 
     /**
-     * Creates an estimated sort-adjusted CVSSv3 score for an unscored textual severity.
-     * For recognized severities below critical it returns a value at the lower bound of the CVSSv3 baseScore for that severity.
-     * For recognized critical severities it returns a score in-between the upper bound of the HIGH CVSSv2 score and the lowest
-     * sort-adjusted CVSSv3 critical score, so that unscored critical vulnerabilties are ordered in between CRITICAL scored CVSSv3
-     * rated vulnerabilities and HIGH-scored CVSSv2 rated vulnerabilities.
-     * For unrecognized severities it returns a score in-between the top HIGH CVSSv2 score and the estimatedSortAdjustedCVSSv3
-     * score for an unscored severity recognized as critical, so that recognized critical will win over unrecognized severities
-     * while unrecognized severities are assumed to be of a critical nature.
+     * Creates an estimated sort-adjusted CVSSv3 score for an unscored textual
+     * severity. For recognized severities below critical it returns a value at
+     * the lower bound of the CVSSv3 baseScore for that severity. For recognized
+     * critical severities it returns a score in-between the upper bound of the
+     * HIGH CVSSv2 score and the lowest sort-adjusted CVSSv3 critical score, so
+     * that unscored critical vulnerabilties are ordered in between CRITICAL
+     * scored CVSSv3 rated vulnerabilities and HIGH-scored CVSSv2 rated
+     * vulnerabilities. For unrecognized severities it returns a score
+     * in-between the top HIGH CVSSv2 score and the estimatedSortAdjustedCVSSv3
+     * score for an unscored severity recognized as critical, so that recognized
+     * critical will win over unrecognized severities while unrecognized
+     * severities are assumed to be of a critical nature.
      *
      * @param severity The textual severity, may be null
-     * @return A float that can be used to numerically sort vulnerabilities in approximated severity (highest float represents
-     * highest severity).
+     * @return A float that can be used to numerically sort vulnerabilities in
+     * approximated severity (highest float represents highest severity).
      * @see #sortAdjustedCVSSv3BaseScore(float)
      */
     public static Double estimatedSortAdjustedCVSSv3(final String severity) {
@@ -127,21 +145,23 @@ public final class SeverityUtil {
             case ASSUMED_CRITICAL:
             default:
                 SeverityUtil.LOGGER.debug("Unrecognized unscored textual severity: {}, assuming critical score as worst-case "
-                                           + "estimate for sorting",
-                                           severity);
+                        + "estimate for sorting",
+                        severity);
                 return 10.1;
         }
     }
 
     /**
-     * Compute an adjusted CVSSv3 baseScore that ensures that CRITICAL CVSSv3 scores will win over HIGH CVSSv2 and CRITICAL
-     * unscored severities to allow for a best-effort sorting that enables the report to list a reliable 'highest severity'
-     * in the report.
+     * Compute an adjusted CVSSv3 baseScore that ensures that CRITICAL CVSSv3
+     * scores will win over HIGH CVSSv2 and CRITICAL unscored severities to
+     * allow for a best-effort sorting that enables the report to list a
+     * reliable 'highest severity' in the report.
      *
      * @param cvssV3BaseScore The cvssV3 baseScore severity of a vulnerability
-     * @return The cvssV3 baseScore, adjusted if necessary in order to guarantee that CVSSv3 CRITICAL scores will rate higher than
-     * CVSSv2 HIGH, unscored critical severities and unscored unrecognized severities (which are assumed for sorting to be of a
-     * critical nature)
+     * @return The cvssV3 baseScore, adjusted if necessary in order to guarantee
+     * that CVSSv3 CRITICAL scores will rate higher than CVSSv2 HIGH, unscored
+     * critical severities and unscored unrecognized severities (which are
+     * assumed for sorting to be of a critical nature)
      * @see #estimatedSortAdjustedCVSSv3(String)
      */
     public static Double sortAdjustedCVSSv3BaseScore(final Double cvssV3BaseScore) {
@@ -152,54 +172,60 @@ public final class SeverityUtil {
     }
 
     /**
-     * An enum to translate unscored severity texts to a severity level of a defined set of severities.
-     * Allows for re-use of the text-to-severity mapping in multiple helper methods.
+     * An enum to translate unscored severity texts to a severity level of a
+     * defined set of severities. Allows for re-use of the text-to-severity
+     * mapping in multiple helper methods.
      */
     private enum Severity {
         /**
-         * A severity level for textual values that should be regarded as accompanying a critical severity vulnerability
+         * A severity level for textual values that should be regarded as
+         * accompanying a critical severity vulnerability
          */
         CRITICAL,
         /**
-         * A severity level for textual values that are not recognized and therefor assumed to be accompanying a critical severity
-         * vulnerability
+         * A severity level for textual values that are not recognized and
+         * therefor assumed to be accompanying a critical severity vulnerability
          */
         ASSUMED_CRITICAL,
         /**
-         * A severity level for textual values that should be regarded as accompanying a high severity vulnerability
+         * A severity level for textual values that should be regarded as
+         * accompanying a high severity vulnerability
          */
         HIGH,
         /**
-         * A severity level for textual values that should be regarded as accompanying a medium severity vulnerability
+         * A severity level for textual values that should be regarded as
+         * accompanying a medium severity vulnerability
          */
         MEDIUM,
         /**
-         * A severity level for textual values that should be regarded as accompanying a low severity vulnerability
+         * A severity level for textual values that should be regarded as
+         * accompanying a low severity vulnerability
          */
         LOW,
         /**
-         * A severity level for textual values that should be regarded as accompanying a vulnerability of informational nature
+         * A severity level for textual values that should be regarded as
+         * accompanying a vulnerability of informational nature
          */
         INFO;
 
         public static Severity forUnscored(String value) {
             switch (value == null ? "none" : value.toLowerCase()) {
-            case "critical":
-                return CRITICAL;
-            case "high":
-                return HIGH;
-            case "moderate":
-            case "medium":
-                return MEDIUM;
-            case "info":
-            case "informational":
-                return INFO;
-            case "low":
-            case "unknown":
-            case "none":
-                return LOW;
-            default:
-                return ASSUMED_CRITICAL;
+                case "critical":
+                    return CRITICAL;
+                case "high":
+                    return HIGH;
+                case "moderate":
+                case "medium":
+                    return MEDIUM;
+                case "info":
+                case "informational":
+                    return INFO;
+                case "low":
+                case "unknown":
+                case "none":
+                    return LOW;
+                default:
+                    return ASSUMED_CRITICAL;
             }
         }
     }

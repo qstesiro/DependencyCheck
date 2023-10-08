@@ -30,18 +30,46 @@ import org.owasp.dependencycheck.data.nvdcve.CveDB;
  */
 public class NvdApiProcessor implements Callable<NvdApiProcessor> {
 
+    /**
+     * A reference to the database.
+     */
     private final CveDB cveDB;
+    /**
+     * The collection of NVD API data to add to the database.
+     */
     private final Collection<DefCveItem> data;
+    /**
+     * Reference to the CVE Ecosystem Mapper object.
+     */
     private final CveEcosystemMapper mapper = new CveEcosystemMapper();
+    /**
+     * The start time.
+     */
     private final long startTime;
+    /**
+     * The end time.
+     */
     private long endTime = 0;
-    
+
+    /**
+     * Create a new processor to put the NVD data into the database.
+     *
+     * @param cveDB a reference to the database
+     * @param data the data to add to the database
+     * @param startTime the start time of the update process.
+     */
     public NvdApiProcessor(final CveDB cveDB, Collection<DefCveItem> data, long startTime) {
         this.cveDB = cveDB;
         this.data = data;
         this.startTime = startTime;
     }
 
+    /**
+     * Create a new processor to put the NVD data into the database.
+     *
+     * @param cveDB a reference to the database
+     * @param data the data to add to the database
+     */
     public NvdApiProcessor(final CveDB cveDB, Collection<DefCveItem> data) {
         this(cveDB, data, System.currentTimeMillis());
     }
@@ -54,7 +82,12 @@ public class NvdApiProcessor implements Callable<NvdApiProcessor> {
         endTime = System.currentTimeMillis();
         return this;
     }
-    
+
+    /**
+     * Calculates how long the update process took.
+     *
+     * @return the number of milliseconds that the update process took
+     */
     public long getDurationMillis() {
         return endTime - startTime;
     }

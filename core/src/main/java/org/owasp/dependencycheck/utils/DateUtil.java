@@ -93,8 +93,8 @@ public final class DateUtil {
     public static boolean withinDateRange(ZonedDateTime date, ZonedDateTime compareTo, int dayRange) {
         //seconds = dayRange x 24 hours/day x 60 min/hour x 60 sec/min
         final long seconds = dayRange * 24L * 60L * 60L;
-        Duration duration = Duration.between(date, compareTo);
-        long secondsDifference = duration.getSeconds();
+        final Duration duration = Duration.between(date, compareTo);
+        final long secondsDifference = duration.getSeconds();
         return secondsDifference < seconds;
     }
 

@@ -115,23 +115,30 @@ public final class CvssUtil {
                             vectorString));
         }
 
-        String version = CvssV2Data.Version._2_0.value();
+        final String version = CvssV2Data.Version._2_0.value();
         //"AV:L/AC:L/Au:N/C:N/I:N/A:C"
-        CvssV2Data.AccessVectorType accessVector = CvssV2Data.AccessVectorType.fromValue(metrics.get("AV"));
-        CvssV2Data.AccessComplexityType attackComplexity = CvssV2Data.AccessComplexityType.fromValue(metrics.get("AC"));
-        CvssV2Data.AuthenticationType authentication = CvssV2Data.AuthenticationType.fromValue(metrics.get("Au"));
-        CvssV2Data.CiaType confidentialityImpact = CvssV2Data.CiaType.fromValue(metrics.get("C"));
-        CvssV2Data.CiaType integrityImpact = CvssV2Data.CiaType.fromValue(metrics.get("I"));
-        CvssV2Data.CiaType availabilityImpact = CvssV2Data.CiaType.fromValue(metrics.get("A"));
+        final CvssV2Data.AccessVectorType accessVector = CvssV2Data.AccessVectorType.fromValue(metrics.get("AV"));
+        final CvssV2Data.AccessComplexityType attackComplexity = CvssV2Data.AccessComplexityType.fromValue(metrics.get("AC"));
+        final CvssV2Data.AuthenticationType authentication = CvssV2Data.AuthenticationType.fromValue(metrics.get("Au"));
+        final CvssV2Data.CiaType confidentialityImpact = CvssV2Data.CiaType.fromValue(metrics.get("C"));
+        final CvssV2Data.CiaType integrityImpact = CvssV2Data.CiaType.fromValue(metrics.get("I"));
+        final CvssV2Data.CiaType availabilityImpact = CvssV2Data.CiaType.fromValue(metrics.get("A"));
 
-        String baseSeverity = cvssV2ScoreToSeverity(baseScore);
-        CvssV2Data data = new CvssV2Data(version, vectorString, accessVector, attackComplexity,
-                authentication, confidentialityImpact, integrityImpact, availabilityImpact, baseScore, baseSeverity, null, null, null, null, null, null, null, null, null, null);
-        CvssV2 cvss = new CvssV2(null, null, data, baseSeverity, null, null, null, null, null, null, null);
+        final String baseSeverity = cvssV2ScoreToSeverity(baseScore);
+        final CvssV2Data data = new CvssV2Data(version, vectorString, accessVector, attackComplexity,
+                authentication, confidentialityImpact, integrityImpact, availabilityImpact, baseScore, baseSeverity,
+                null, null, null, null, null, null, null, null, null, null);
+        final CvssV2 cvss = new CvssV2(null, null, data, baseSeverity, null, null, null, null, null, null, null);
         return cvss;
 
     }
 
+    /**
+     * Determines the severity from the score.
+     *
+     * @param score the score
+     * @return the severity
+     */
     public static String cvssV2ScoreToSeverity(Double score) {
         if (score != null) {
             if (ZERO.compareTo(score) <= 0 && FOUR.compareTo(score) > 0) {
@@ -145,6 +152,12 @@ public final class CvssUtil {
         return UNKNOWN;
     }
 
+    /**
+     * Determines the severity from the score.
+     *
+     * @param score the score
+     * @return the severity
+     */
     public static CvssV3Data.SeverityType cvssV3ScoreToSeverity(Double score) {
         if (score != null) {
             if (ZERO.compareTo(score) == 0) {
@@ -191,23 +204,23 @@ public final class CvssUtil {
                             vectorString));
         }
 
-        CvssV3Data.Version version = CvssV3Data.Version.fromValue(versionString);
+        final CvssV3Data.Version version = CvssV3Data.Version.fromValue(versionString);
         //"CVSS:3.1\/AV:L\/AC:L\/PR:L\/UI:N\/S:U\/C:N\/I:N\/A:H"
-        CvssV3Data.AttackVectorType attackVector = CvssV3Data.AttackVectorType.fromValue(metrics.get("AV"));
-        CvssV3Data.AttackComplexityType attackComplexity = CvssV3Data.AttackComplexityType.fromValue(metrics.get("AC"));
-        CvssV3Data.PrivilegesRequiredType privilegesRequired = CvssV3Data.PrivilegesRequiredType.fromValue(metrics.get("PR"));
-        CvssV3Data.UserInteractionType userInteraction = CvssV3Data.UserInteractionType.fromValue(metrics.get("UI"));
-        CvssV3Data.ScopeType scope = CvssV3Data.ScopeType.fromValue(metrics.get("S"));
-        CvssV3Data.CiaType confidentialityImpact = CvssV3Data.CiaType.fromValue(metrics.get("C"));
-        CvssV3Data.CiaType integrityImpact = CvssV3Data.CiaType.fromValue(metrics.get("I"));
-        CvssV3Data.CiaType availabilityImpact = CvssV3Data.CiaType.fromValue(metrics.get("A"));
+        final CvssV3Data.AttackVectorType attackVector = CvssV3Data.AttackVectorType.fromValue(metrics.get("AV"));
+        final CvssV3Data.AttackComplexityType attackComplexity = CvssV3Data.AttackComplexityType.fromValue(metrics.get("AC"));
+        final CvssV3Data.PrivilegesRequiredType privilegesRequired = CvssV3Data.PrivilegesRequiredType.fromValue(metrics.get("PR"));
+        final CvssV3Data.UserInteractionType userInteraction = CvssV3Data.UserInteractionType.fromValue(metrics.get("UI"));
+        final CvssV3Data.ScopeType scope = CvssV3Data.ScopeType.fromValue(metrics.get("S"));
+        final CvssV3Data.CiaType confidentialityImpact = CvssV3Data.CiaType.fromValue(metrics.get("C"));
+        final CvssV3Data.CiaType integrityImpact = CvssV3Data.CiaType.fromValue(metrics.get("I"));
+        final CvssV3Data.CiaType availabilityImpact = CvssV3Data.CiaType.fromValue(metrics.get("A"));
 
-        String baseSeverityString = Cvss3Severity.of(baseScore.floatValue()).name();
-        CvssV3Data.SeverityType baseSeverity = CvssV3Data.SeverityType.fromValue(baseSeverityString);
-        CvssV3Data data = new CvssV3Data(version, vectorString, attackVector, attackComplexity,
+        final String baseSeverityString = Cvss3Severity.of(baseScore.floatValue()).name();
+        final CvssV3Data.SeverityType baseSeverity = CvssV3Data.SeverityType.fromValue(baseSeverityString);
+        final CvssV3Data data = new CvssV3Data(version, vectorString, attackVector, attackComplexity,
                 privilegesRequired, userInteraction, scope, confidentialityImpact, integrityImpact, availabilityImpact, baseScore,
                 baseSeverity, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
-        CvssV3 cvss = new CvssV3(null, null, data, null, null);
+        final CvssV3 cvss = new CvssV3(null, null, data, null, null);
         return cvss;
 
     }
