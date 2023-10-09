@@ -2200,12 +2200,12 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
             if (System.getProperty("http.nonProxyHosts") != null) {
                 settings.setString(Settings.KEYS.PROXY_NON_PROXY_HOSTS, System.getProperty("http.nonProxyHosts"));
             }
-        } else if (this.proxy != null && this.proxy.host != null) {
+        } else if (this.proxy != null && this.proxy.getHost() != null) {
             // or use configured <proxy>
-            settings.setString(Settings.KEYS.PROXY_SERVER, this.proxy.host);
-            settings.setString(Settings.KEYS.PROXY_PORT, Integer.toString(this.proxy.port));
+            settings.setString(Settings.KEYS.PROXY_SERVER, this.proxy.getHost());
+            settings.setString(Settings.KEYS.PROXY_PORT, Integer.toString(this.proxy.getPort()));
             // user name and password from <server> entry settings.xml
-            configureServerCredentials(this.proxy.serverId, Settings.KEYS.PROXY_USERNAME, Settings.KEYS.PROXY_PASSWORD);
+            configureServerCredentials(this.proxy.getServerId(), Settings.KEYS.PROXY_USERNAME, Settings.KEYS.PROXY_PASSWORD);
         }
 
         final String[] suppressions = determineSuppressions();
