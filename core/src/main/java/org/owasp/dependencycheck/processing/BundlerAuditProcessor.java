@@ -293,7 +293,6 @@ public class BundlerAuditProcessor extends Processor<InputStream> {
                     .version(version).build();
             vulnerability.addVulnerableSoftware(vs);
             vulnerability.setMatchedVulnerableSoftware(vs);
-            final Double score = -1.0;
             vulnerability.setUnscoredSeverity("UNKNOWN");
         }
         LOGGER.debug("bundle-audit ({}): {}", parentName, nextLine);

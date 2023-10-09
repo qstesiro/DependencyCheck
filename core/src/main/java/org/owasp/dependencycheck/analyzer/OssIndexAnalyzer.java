@@ -318,7 +318,7 @@ public class OssIndexAnalyzer extends AbstractAnalyzer {
         result.setDescription(source.getDescription());
         result.addCwe(source.getCwe());
 
-        final double cvssScore = source.getCvssScore() != null ? source.getCvssScore() : -1;
+        final double cvssScore = source.getCvssScore() != null ? source.getCvssScore().doubleValue() : -1;
 
         if (source.getCvssVector() != null) {
             if (source.getCvssVector().startsWith("CVSS:3")) {
