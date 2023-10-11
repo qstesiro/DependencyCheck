@@ -43,7 +43,7 @@ public class SettingsTest extends BaseTest {
      */
     @Test
     public void testGetString() {
-        String key = Settings.KEYS.CVE_MODIFIED_VALID_FOR_DAYS;
+        String key = Settings.KEYS.NVD_API_DATAFEED_VALID_FOR_DAYS;
         String expResult = "7";
         String result = getSettings().getString(key);
         Assert.assertTrue(result.endsWith(expResult));

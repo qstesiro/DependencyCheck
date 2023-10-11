@@ -15,7 +15,7 @@
  *
  * Copyright (c) 2013 Jeremy Long. All Rights Reserved.
  */
-package org.owasp.dependencycheck.data.update.nvd;
+package org.owasp.dependencycheck.data.update.nvd.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

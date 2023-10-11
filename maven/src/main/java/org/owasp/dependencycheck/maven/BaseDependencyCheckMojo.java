@@ -66,7 +66,6 @@ import org.owasp.dependencycheck.exception.DependencyNotFoundException;
 import org.owasp.dependencycheck.exception.ExceptionCollection;
 import org.owasp.dependencycheck.exception.ReportException;
 import org.owasp.dependencycheck.utils.Checksum;
-import org.owasp.dependencycheck.utils.CveUrlParser;
 import org.owasp.dependencycheck.utils.Filter;
 import org.owasp.dependencycheck.utils.Settings;
 import org.sonatype.plexus.components.sec.dispatcher.DefaultSecDispatcher;
@@ -236,7 +235,7 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     @Deprecated
     private boolean failBuildOnAnyVulnerability = false;
     /**
-     * Sets whether auto-updating of the NVD CVE/CPE data is enabled. It is not
+     * Sets whether auto-updating of the NVD CVE data is enabled. It is not
      * recommended that this be turned to false. Default is true.
      */
     @SuppressWarnings("CanBeFinal")
@@ -817,13 +816,6 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     @Parameter(property = "databaseDriverPath")
     private String databaseDriverPath;
     /**
-     * The server id in the settings.xml; used to retrieve encrypted passwords
-     * from the settings.xml.
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "serverId")
-    private String serverId;
-    /**
      * A reference to the settings.xml settings.
      */
     @SuppressWarnings("CanBeFinal")
@@ -912,56 +904,69 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
     @SuppressWarnings("CanBeFinal")
     @Parameter(property = "dbFilename")
     private String dbFilename;
-
-    /**
-     * Data Mirror URL for CVE 1.2.
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveUrlModified")
-    private String cveUrlModified;
-    /**
-     * Base Data Mirror URL for CVE 1.2.
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveUrlBase")
-    private String cveUrlBase;
-    /**
-     * The wait timeout between downloading from the NVD.
-     */
-    @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveWaitTime")
-    private String cveWaitTime;
-    /**
-     * The username to use when connecting to the CVE-URL.
-     */
-    @Parameter(property = "cveUser")
-    private String cveUser;
-    /**
-     * The password to authenticate to the CVE-URL.
-     */
-    @Parameter(property = "cvePassword")
-    private String cvePassword;
     /**
      * The server id in the settings.xml; used to retrieve encrypted passwords
-     * from the settings.xml for cve-URLs.
+     * from the settings.xml. This is used for the database username and
+     * password.
      */
     @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveServerId")
-    private String cveServerId;
+    @Parameter(property = "nvdApiKey")
+    private String serverId;
     /**
-     * Optionally skip excessive CVE update checks for a designated duration in
-     * hours.
+     * The NVD API Key.
      */
     @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveValidForHours")
-    private Integer cveValidForHours;
+    @Parameter(property = "nvdApiKey")
+    private String nvdApiKey;
 
     /**
-     * Specify the first year of NVD CVE data to download; default is 2002.
+     * The server id in the settings.xml; used to retrieve encrypted API Key
+     * from the settings.xml for the NVD API Key. Note that the password is used
+     * as the API Key
      */
     @SuppressWarnings("CanBeFinal")
-    @Parameter(property = "cveStartYear")
-    private Integer cveStartYear;
+    @Parameter(property = "nvdApiServerId")
+    private String nvdApiServerId;
+
+    /**
+     * The number of hours to wait before checking for new updates from the NVD.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdValidForHours")
+    private Integer nvdValidForHours;
+
+    /**
+     * The NVD API Data Feed URL.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdDatafeedUrl")
+    private String nvdDatafeedUrl;
+
+    /**
+     * The server id in the settings.xml; used to retrieve encrypted passwords
+     * from the settings.xml for the NVD Data Feed.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdDatafeedServerId")
+    private String nvdDatafeedServerId;
+    /**
+     * The username for basic auth to the NVD Data Feed.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdUser")
+    private String nvdUser;
+    /**
+     * The password for basic auth to the NVD Data Feed.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdPassword")
+    private String nvdPassword;
+    /**
+     * The time in milliseconds to wait between downloading NVD API data.
+     */
+    @SuppressWarnings("CanBeFinal")
+    @Parameter(property = "nvdApiDelay")
+    private Integer nvdApiDelay;
 
     /**
      * The path to dotnet core.
@@ -2313,27 +2318,25 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         settings.setStringIfNotEmpty(Settings.KEYS.DATA_DIRECTORY, dataDirectory);
         settings.setStringIfNotEmpty(Settings.KEYS.DB_FILE_NAME, dbFilename);
 
-        final String cveModifiedJson = Optional.ofNullable(cveUrlModified)
-                .filter(arg -> !arg.isEmpty())
-                .orElseGet(this::getDefaultCveUrlModified);
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_MODIFIED_JSON, cveModifiedJson);
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_BASE_JSON, cveUrlBase);
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_DOWNLOAD_WAIT_TIME, cveWaitTime);
-        settings.setIntIfNotNull(Settings.KEYS.CVE_CHECK_VALID_FOR_HOURS, cveValidForHours);
-        if (cveStartYear != null && cveStartYear < 2002) {
-            getLog().warn("Invalid configuration: cveStartYear must be 2002 or greater");
-            cveStartYear = 2002;
+        settings.setIntIfNotNull(Settings.KEYS.NVD_API_DELAY, nvdApiDelay);
+        settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_URL, nvdDatafeedUrl);
+        settings.setIntIfNotNull(Settings.KEYS.NVD_API_VALID_FOR_HOURS, nvdValidForHours);
+
+        if (nvdApiKey == null && nvdApiServerId != null) {
+            configureServerCredentialsApiKey(nvdApiServerId, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
+        } else {
+            settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_KEY, nvdApiKey);
         }
-        settings.setIntIfNotNull(Settings.KEYS.CVE_START_YEAR, cveStartYear);
+        if (nvdUser == null && nvdPassword == null && nvdDatafeedServerId != null) {
+            configureServerCredentials(nvdDatafeedServerId, Settings.KEYS.NVD_API_DATAFEED_USER, Settings.KEYS.NVD_API_DATAFEED_PASSWORD);
+        } else {
+            settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_USER, nvdUser);
+            settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_PASSWORD, nvdPassword);
+        }
+
         settings.setBooleanIfNotNull(Settings.KEYS.PRETTY_PRINT, prettyPrint);
         artifactScopeExcluded = new ArtifactScopeExcluded(skipTestScope, skipProvidedScope, skipSystemScope, skipRuntimeScope);
         artifactTypeExcluded = new ArtifactTypeExcluded(skipArtifactType);
-        if (cveUser == null && cvePassword == null && cveServerId != null) {
-            configureServerCredentials(cveServerId, Settings.KEYS.CVE_USER, Settings.KEYS.CVE_PASSWORD);
-        } else {
-            settings.setStringIfNotEmpty(Settings.KEYS.CVE_USER, cveUser);
-            settings.setStringIfNotEmpty(Settings.KEYS.CVE_PASSWORD, cvePassword);
-        }
         if (suppressionFileUser == null && suppressionFilePassword == null && suppressionFileServerId != null) {
             configureServerCredentials(suppressionFileServerId, Settings.KEYS.SUPPRESSION_FILE_USER, Settings.KEYS.SUPPRESSION_FILE_PASSWORD);
         } else {
@@ -2368,6 +2371,32 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
                 }
                 settings.setStringIfNotEmpty(userSettingKey, username);
                 settings.setStringIfNotEmpty(passwordSettingKey, password);
+            } else {
+                getLog().error(String.format("Server '%s' not found in the settings.xml file", serverId));
+            }
+        }
+    }
+
+    /**
+     * Retrieves the server credentials from the settings.xml, decrypts the
+     * password, and places the values into the settings under the given key
+     * names. This is used to retrieve an encrypted password as an API key.
+     *
+     * @param serverId the server id
+     * @param userSettingKey the property name for the username
+     * @param passwordSettingKey the property name for the password
+     */
+    private void configureServerCredentialsApiKey(String serverId, String apiKeySetting) {
+        if (serverId != null) {
+            final Server server = settingsXml.getServer(serverId);
+            if (server != null) {
+                String password = null;
+                try {
+                    password = decryptPasswordFromSettings(server.getPassword());
+                } catch (SecDispatcherException ex) {
+                    password = handleSecDispatcherException("server", serverId, server.getPassword(), ex);
+                }
+                settings.setStringIfNotEmpty(apiKeySetting, password);
             } else {
                 getLog().error(String.format("Server '%s' not found in the settings.xml file", serverId));
             }
@@ -2661,11 +2690,6 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         }
     }
 
-    private String getDefaultCveUrlModified() {
-        return CveUrlParser.newInstance(getSettings())
-                .getDefaultCveUrlModified(cveUrlBase);
-    }
-
     //</editor-fold>
     //CSOFF: ParameterNumber
     private ExceptionCollection scanDependencyNode(DependencyNode dependencyNode, DependencyNode root,
@@ -2931,5 +2955,6 @@ public abstract class BaseDependencyCheckMojo extends AbstractMojo implements Ma
         }
         return exCol;
     }
+
 }
 //CSON: FileLength

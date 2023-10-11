@@ -22,7 +22,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.cli.ParseException;
@@ -34,7 +33,6 @@ import org.apache.tools.ant.types.LogLevel;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
 import org.owasp.dependencycheck.exception.ExceptionCollection;
 import org.owasp.dependencycheck.exception.ReportException;
-import org.owasp.dependencycheck.utils.CveUrlParser;
 import org.owasp.dependencycheck.utils.InvalidSettingException;
 import org.owasp.dependencycheck.utils.Settings;
 import org.slf4j.Logger;
@@ -477,10 +475,6 @@ public class App {
                 cli.getStringArgument(CliParser.ARGUMENT.CONNECTION_READ_TIMEOUT));
         settings.setStringIfNotEmpty(Settings.KEYS.HINTS_FILE,
                 cli.getStringArgument(CliParser.ARGUMENT.HINTS_FILE));
-        settings.setIntIfNotNull(Settings.KEYS.CVE_CHECK_VALID_FOR_HOURS,
-                cli.getIntegerValue(CliParser.ARGUMENT.CVE_VALID_FOR_HOURS));
-        settings.setIntIfNotNull(Settings.KEYS.CVE_START_YEAR,
-                cli.getIntegerValue(CliParser.ARGUMENT.CVE_START_YEAR));
         settings.setArrayIfNotEmpty(Settings.KEYS.SUPPRESSION_FILE,
                 cli.getStringArguments(CliParser.ARGUMENT.SUPPRESSION_FILES));
         //File Type Analyzer Settings
@@ -649,21 +643,13 @@ public class App {
                 cli.getStringArgument(CliParser.ARGUMENT.ADDITIONAL_ZIP_EXTENSIONS));
         settings.setStringIfNotEmpty(Settings.KEYS.ANALYZER_ASSEMBLY_DOTNET_PATH,
                 cli.getStringArgument(CliParser.ARGUMENT.PATH_TO_CORE));
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_BASE_JSON,
-                cli.getStringArgument(CliParser.ARGUMENT.CVE_BASE_URL));
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_DOWNLOAD_WAIT_TIME,
-                cli.getStringArgument(CliParser.ARGUMENT.CVE_DOWNLOAD_WAIT_TIME));
 
-        final String cveModifiedJson = Optional.ofNullable(cli.getStringArgument(CliParser.ARGUMENT.CVE_MODIFIED_URL))
-                .filter(arg -> !arg.isEmpty())
-                .orElseGet(() -> getDefaultCveUrlModified(cli));
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_MODIFIED_JSON,
-                cveModifiedJson);
-
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_USER,
-                cli.getStringArgument(CliParser.ARGUMENT.CVE_USER));
-        settings.setStringIfNotEmpty(Settings.KEYS.CVE_PASSWORD,
-                cli.getStringArgument(CliParser.ARGUMENT.CVE_PASSWORD, Settings.KEYS.CVE_PASSWORD));
+        settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_KEY, cli.getStringArgument(CliParser.ARGUMENT.NVD_API_KEY));
+        settings.setIntIfNotNull(Settings.KEYS.NVD_API_DELAY, cli.getIntegerValue(CliParser.ARGUMENT.NVD_API_DELAY));
+        settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_URL, cli.getStringArgument(CliParser.ARGUMENT.NVD_API_DATAFEED_URL));
+        settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_USER, cli.getStringArgument(CliParser.ARGUMENT.NVD_API_DATAFEED_USER));
+        settings.setStringIfNotEmpty(Settings.KEYS.NVD_API_DATAFEED_PASSWORD, cli.getStringArgument(CliParser.ARGUMENT.NVD_API_DATAFEED_PASSWORD));
+        settings.setIntIfNotNull(Settings.KEYS.NVD_API_VALID_FOR_HOURS, cli.getIntegerValue(CliParser.ARGUMENT.NVD_API_VALID_FOR_HOURS));
 
         settings.setStringIfNotNull(Settings.KEYS.HOSTED_SUPPRESSIONS_URL,
                 cli.getStringArgument(CliParser.ARGUMENT.HOSTED_SUPPRESSIONS_URL));
@@ -673,11 +659,6 @@ public class App {
                 cli.hasOption(CliParser.ARGUMENT.HOSTED_SUPPRESSIONS_FORCEUPDATE));
         settings.setIntIfNotNull(Settings.KEYS.HOSTED_SUPPRESSIONS_VALID_FOR_HOURS,
                 cli.getIntegerValue(CliParser.ARGUMENT.HOSTED_SUPPRESSIONS_VALID_FOR_HOURS));
-    }
-
-    private String getDefaultCveUrlModified(CliParser cli) {
-        return CveUrlParser.newInstance(settings)
-                .getDefaultCveUrlModified(cli.getStringArgument(CliParser.ARGUMENT.CVE_BASE_URL));
     }
 
     //CSON: MethodLength

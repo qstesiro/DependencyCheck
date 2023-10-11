@@ -162,10 +162,15 @@ public final class Settings {
          */
         public static final String CVE_CPE_STARTS_WITH_FILTER = "cve.cpe.startswith.filter";
 
+        //TODO NVD Begin New
         /**
          * API Key for the NVD API.
          */
         public static final String NVD_API_KEY = "nvd.api.key";
+        /**
+         * The delay between requests for the NVD API.
+         */
+        public static final String NVD_API_DELAY = "nvd.api.key";
         /**
          * The properties key to control the skipping of the check for NVD
          * updates.
@@ -192,94 +197,11 @@ public final class Settings {
          * The starting year for the NVD CVE Data feed cache.
          */
         public static final String NVD_API_DATAFEED_START_YEAR = "nvd.api.datafeed.startyear";
-
-        //TODO DELETE BEGIN
-        /**
-         * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the JSON data feeds.
-         */
-        public static final String CVE_MODIFIED_JSON = "cve.url.modified";
-        /**
-         * The properties key for the default filename of the CVE modified URL.
-         */
-        static final String CVE_MODIFIED_DEFAULT_FILENAME = "cve.url.modified.defaultFilename";
-        /**
-         * The properties key for the original/modified URL to retrieve the
-         * recently modified and added CVE entries (last 8 days). Note, this is
-         * only used to compare against CVE_MODIFIED_JSON.
-         */
-        public static final String CVE_ORIGINAL_JSON = "cve.url.original";
-        /**
-         * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days) using the JSON data feeds.
-         */
-        public static final String CVE_BASE_JSON = "cve.url.base";
-        /**
-         * The properties key for the default filename of the CVE base URL.
-         */
-        static final String CVE_BASE_DEFAULT_FILENAME = "cve.url.base.defaultFilename";
-        /**
-         * The username to use when connecting to the CVE-URL.
-         */
-        public static final String CVE_USER = "cve.user";
-        /**
-         * The password to authenticate to the CVE-URL.
-         */
-        public static final String CVE_PASSWORD = "cve.password";
-        /**
-         * The properties key for the URL to retrieve the recently modified and
-         * added CVE entries (last 8 days).
-         */
-        public static final String CVE_MODIFIED_VALID_FOR_DAYS = "cve.url.modified.validfordays";
-        /**
-         * The properties key to control the skipping of the check for CVE
-         * updates.
-         */
-        public static final String CVE_CHECK_VALID_FOR_HOURS = "cve.check.validforhours";
-        /**
-         * The properties key for the telling us how many cve.url.* URLs exists.
-         * This is used in combination with CVE_BASE_URL to be able to retrieve
-         * the URLs for all of the files that make up the NVD CVE listing.
-         */
-        public static final String CVE_START_YEAR = "cve.startyear";
-        /**
-         * A configurable sleep time between downloading the NVD CVE data. The
-         * time is in milliseconds.
-         */
-        public static final String CVE_DOWNLOAD_WAIT_TIME = "cve.download.waittime";
-
-        /**
-         * The properties key for the telling us how many nvd.url.* URLs exists.
-         * This is used in combination with NVD_CACHE_URL to be able to retrieve
-         * the URLs for all of the files that make up the NVD CVE listing.
-         */
-        public static final String NVD_CACHE_START_YEAR = "nvd.cache.startyear";
-        /**
-         * The username to use when connecting to the NVD Cache URL.
-         */
-        public static final String NVD_CACHE_USER = "nvd.user";
-        /**
-         * The password to authenticate to the NVD Cache URL.
-         */
-        public static final String NVD_CACHE_PASSWORD = "nvd.password";
-        /**
-         * The properties key for the URL to retrieve the recently cached NVD
-         * JSON data feeds.
-         */
-        public static final String NVD_CACHE_URL = "nvd.cache.url";
+        //END NEW
         /**
          * The key to determine if the NVD CVE analyzer is enabled.
          */
         public static final String ANALYZER_NVD_CVE_ENABLED = "analyzer.nvdcve.enabled";
-        /**
-         * The properties key setting indicating how many days past the new year
-         * that ODC will "skip" updating that years data feed if not present.
-         */
-        public static final String NVD_NEW_YEAR_GRACE_PERIOD = "nvd.newyear.grace.period";
-        //----------------------------------------------------------------------
-        //DELETE END
-        //----------------------------------------------------------------------
-
         /**
          * The properties key that indicates how often the CPE data needs to be
          * updated.

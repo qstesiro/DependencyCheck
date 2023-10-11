@@ -47,7 +47,7 @@ import org.owasp.dependencycheck.data.nvdcve.CveDB;
 import org.owasp.dependencycheck.data.nvdcve.DatabaseException;
 import org.owasp.dependencycheck.data.nvdcve.DatabaseProperties;
 import org.owasp.dependencycheck.data.update.exception.UpdateException;
-import org.owasp.dependencycheck.data.update.nvd.DownloadTask;
+import org.owasp.dependencycheck.data.update.nvd.api.DownloadTask;
 import org.owasp.dependencycheck.data.update.nvd.api.NvdApiProcessor;
 import org.owasp.dependencycheck.utils.DateUtil;
 import org.owasp.dependencycheck.utils.DownloadFailedException;
@@ -266,6 +266,18 @@ public class NvdApiDataSource implements CachedWebDataSource {
                     .withDelay(3000)
                     .withThreadCount(4);
         }
+        long delay = 0;
+        try {
+            delay = settings.getLong(Settings.KEYS.NVD_API_DELAY);
+        } catch (InvalidSettingException ex) {
+            LOGGER.debug("Invalid setting `NVD_API_DELAY`?");
+        }
+        if (delay > 0) {
+            builder.withDelay(delay);
+        }
+        
+        //TODO consider using CVE_CPE_STARTS_WITH_FILTER
+
         ExecutorService processingExecutorService = null;
         try {
             processingExecutorService = Executors.newFixedThreadPool(PROCESSING_THREAD_POOL_SIZE);
