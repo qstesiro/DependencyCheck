@@ -145,7 +145,7 @@ Copyright (c) 2012 - Jeremy Long
         <commons-cli.version>1.5.0</commons-cli.version>
         <commons-io.version>2.14.0</commons-io.version>
         <commons-lang3.version>3.13.0</commons-lang3.version>
-        <commons-text.version>1.10.0</commons-text.version>
+        <commons-text.version>1.14.0</commons-text.version>
         <commons-jcs-core.version>2.2.1</commons-jcs-core.version>
         <aho-corasick-double-array-trie.version>1.2.3</aho-corasick-double-array-trie.version>
         <junit.version>4.13.2</junit.version>
@@ -168,7 +168,7 @@ Copyright (c) 2012 - Jeremy Long
         <com.h3xstream.retirejs.core.version>3.0.4</com.h3xstream.retirejs.core.version>
         <jackson.version>2.15.2</jackson.version>
         <!--necassary for some IDEs to be able to execute test cases (Netbeans)-->
-        <surefireArgLine />
+        <surefireArgLine/>
         
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -776,7 +776,7 @@ Copyright (c) 2012 - Jeremy Long
                             <target name="copy xsd to site">
                                 <copy todir="target/site/">
                                     <fileset dir="core/src/main/resources/schema/">
-                                        <include name="**/*.xsd" />
+                                        <include name="**/*.xsd"/>
                                     </fileset>
                                 </copy>
                             </target>
